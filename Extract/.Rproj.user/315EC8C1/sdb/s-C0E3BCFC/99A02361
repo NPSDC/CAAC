@@ -1,0 +1,18 @@
+{
+    "contents" : "canc = read.csv('../cancer.csv')\nnormal = read.csv('../normal_tissue.csv')\nunique_genes = unique(canc$Gene)\nmapping = read.delim('map-swiss.tab', header = TRUE, sep = \"\\t\")\ncancer.liver = canc[canc$Tumor == 'liver cancer',]\nnormal.liver = normal[normal$Tissue == 'liver', ]\n",
+    "created" : 1442747705634.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2774262679",
+    "id" : "99A02361",
+    "lastKnownWriteTime" : 1442753599,
+    "path" : "~/honours/Extract/extract.R",
+    "project_path" : "extract.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1442747680989.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6EAED058",
+    "lastKnownWriteTime" : 45537448,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "zhok9iofrk",
+        "caption" : "canc",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=canc&cache_key=zhok9iofrk",
+        "displayedObservations" : "1329016",
+        "environment" : "",
+        "object" : "canc",
+        "totalObservations" : "1329016",
+        "variables" : "6"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

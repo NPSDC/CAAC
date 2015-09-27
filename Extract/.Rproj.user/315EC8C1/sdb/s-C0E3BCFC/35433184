@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1442753596078.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "35433184",
+    "lastKnownWriteTime" : 1442753323,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "aneggg1g22",
+        "caption" : "normal.liver",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=normal.liver&cache_key=aneggg1g22",
+        "displayedObservations" : "33133",
+        "environment" : "",
+        "object" : "normal.liver",
+        "totalObservations" : "33133",
+        "variables" : "6"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}
