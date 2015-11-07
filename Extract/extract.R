@@ -6,23 +6,39 @@ find.missing <- function(comp1, comp2)
   return (as.character(comp1[which(is.na(match(comp1, comp2) == T))]))
 }
 
-set.level <- function(cell.level, cell.conc)
+set.level <- function(cell.level, cell.conc, type)
 {
   ##Input - Cell whose level has to be set; cell.conc is the types conc
   #Output - sets it to high or low
-  cell.level = sapply(cell.level, function(x)
-  {
-    #Sets the Cell$Level to only high or low
-    if(x == cell.conc[3] | x == cell.conc[1])
-      x = cell.conc[1]
-    else
-      x = cell.conc[2]
-    #return x;
+  if(type == 1)
+  {  
+    cell.level = sapply(cell.level, function(x)
+    {
+      #Sets the Cell$Level to only high or low
+      if(x == cell.conc[3] | x == cell.conc[1])
+        x = cell.conc[1]
+      else
+        x = cell.conc[2]
+      #return x;
+    }
+    )  
   }
-  )  
+  else
+  {
+    cell.level = sapply(cell.level, function(x)
+    {
+      #Sets the Cell$Level to only Present or Not detected
+      if(x == cell.conc[4] )
+        x = cell.conc[4]
+      else
+        x = "Present"
+     
+    })
+  }
+  
 }
 
-calculate.level <- function(threshold, count.high, count.low)
+calculate.level <- function(threshold, count.high, count.low, vals)
 {
   #Sets the level of a gene based on no of threshold
   total <- count.high + count.low
@@ -30,9 +46,9 @@ calculate.level <- function(threshold, count.high, count.low)
   if(highest/total >= threshold)
   {
     if(highest == count.high)
-      return('High')
+      return(vals[1])
     else
-      return('Low')
+      return(vals[2])
   }   
   else
     return(NA)
@@ -49,6 +65,8 @@ find.mismatch <- function(type.Level,type.Gene, prop.level, no.of.unique.genes)
     {
       if(type.Level[id] != prop.level[id])
       {
+        if(type.Gene[id] == 'ENSG00000001630')
+          print(c(prop.level[id]))
         ans = c(ans, as.character(type.Gene[id]))
       }
     }
@@ -67,7 +85,7 @@ get.mismatch <- function(type.Level, type.Gene, list.cols, l)
   return(ans)
 }
 ###Normal Script
-setwd("~/honours/Extract/")
+setwd("~/Dropbox/honours/Extract/")
 canc = read.csv('../cancer.csv') #The original cancer data
 normal = read.csv('../normal_tissue.csv') # The normal tissue data
 unique_genes = unique(canc$Gene) #The unique genes in cancer
@@ -78,7 +96,7 @@ hepatocytes = normal.liver[which(normal.liver$Cell.type == "hepatocytes"),] #Con
 bile.duct = normal.liver[which(normal.liver$Cell.type == "bile duct cells"),] #Contains only bile duct cells
 conc.hep = levels(hepatocytes$Level) # Various modes of conc such as high;low,med;not det
 conc.bile = levels(bile.duct$Level)
-hepatocytes$Level = set.level(hepatocytes$Level, conc.hep)
+hepatocytes$Level = set.level(hepatocytes$Level, conc.hep, 1)
 bile.duct$Level = set.level(bile.duct$Level, conc.bile)
 
 
@@ -107,7 +125,7 @@ for (x in unique.cancer.genes) #Sets the modified cancer liver with thresholds a
     mod.canc.liver$total[c(2*i +1 , 2*i + 2)] <- mod.canc.liver$count[2*i + 1] + mod.canc.liver$count[2*i + 2]
     levels = sapply(c(0.5, 0.75, 0.9, 1), function(x)
     {
-      calculate.level(x, mod_canc_liver$count[c(2*i + 1)], mod.canc.liver$count[c(2*i + 2)])
+      calculate.level(x, mod.canc.liver$count[c(2*i + 1)], mod.canc.liver$count[c(2*i + 2)], c('High', 'Low'))
     })
     mod.canc.liver$actual.level.50[c(2*i +1 , 2*i + 2)] <- levels[1]
     mod.canc.liver$actual.level.75[c(2*i +1 , 2*i + 2)] <- levels[2]
