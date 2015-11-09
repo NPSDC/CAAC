@@ -1,4 +1,4 @@
-hcc_data = read.csv('~/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
+hcc_data = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
 lev = levels(hcc_data$Patient.2177)
 genes = as.character(hcc_data$GENES[which( hcc_data$Patient.2177 == lev[3] | hcc_data$Patient.2177 == lev[1] | 
                                       hcc_data$Patient.2177 == lev[4])]) #contains genes present(high,med,low) in patient 1
@@ -6,9 +6,7 @@ write(genes, 'hcc_genes.txt') #contains all present genes in patient 1 in high c
 hepatocytes_all = normal.liver[which(normal.liver$Cell.type == "hepatocytes"),] # Will combine high,med, low
 hepatocytes_all$Level = set.level(hepatocytes_all$Level, conc.hep, 2)
 genes.normal.hep.present = as.character(hepatocytes_all$Gene[which(hepatocytes_all$Level == 'Present')])
-genes.normal.hep.present = as.character(normal.liver$Gene
-                                [which(normal.liver$Cell.type == 'hepatocytes' &
-                                         normal.liver$Level != conc.hep[4])])
+
 write(genes.normal.hep.present, 'hep_normal_genes.txt')
 mod.canc.liver.2 = data.frame(Gene = rep(unique(cancer.liver$Gene),2),  #Contains the modified levels of liver cancer
                               Level = factor(rep(c("Present", "Not detected"), l)), #and their levels w.r.t proportions
@@ -55,26 +53,61 @@ names(genes.cancer) <- c("50", "75", "90", "100")
 
 genes.cancer.present <- sapply(list.cancers, function(x) #genes present in all different levels
   {
-    hepatocytes_all$Gene[is.na(x) == F & x == 'Present' ]
+   as.character(hepatocytes_all$Gene[is.na(x) == F & x == 'Present' ])
 })
 names(genes.cancer.present) <- c("50", "75", "90", "100")
 
 genes.cancer.absent <- sapply(list.cancers, function(x)
   {
-    hepatocytes_all$Gene[is.na(x) == F & x == 'Not Detected']
+    hepatocytes_all$Gene[is.na(x) == F && x == 'Not detected']
 })
 names(genes.cancer.absent) <- c("50", "75", "90", "100")
 
 
 find.gene.mismatch <- function(gene.list.1, gene.list.2)
 {
-  return(gene.list.1[is.na(match(gene.list.1, gene.list.2)) == T])
+  return(gene.list.1[!is.na(match(gene.list.1, gene.list.2))])
 }
 
 diff.expressed = get.mismatch(hepatocytes_all$Level, hepatocytes_all$Gene, list.cancers, length(hepatocytes_all$Gene))
+diff.expressed.present = mapply(function(x,y)
+      {
+        find.gene.mismatch(x,y)
+      },genes.cancer.present, diff.expressed)
 
 names(diff.expressed) <- c("50", "75", "90", "100")
+names(diff.expressed.present) <- c("50", "75", "90", "100")
+
 write(diff.expressed$`50`, 'diff.expressed.50.txt')
 write(diff.expressed$`75`, 'diff.expressed.75.txt')
 write(diff.expressed$`90`, 'diff.expressed.90.txt')
 write(diff.expressed$`100`, 'diff.expressed.100.txt')
+
+write(diff.expressed.present$`50`, 'diff.expressed.present.50.txt')
+write(diff.expressed.present$`75`, 'diff.expressed.present.75.txt')
+write(diff.expressed.present$`90`, 'diff.expressed.present.90.txt')
+write(diff.expressed.present$`100`, 'diff.expressed.present.100.txt')
+
+
+####Comparing cancer patients
+patient.list = list(hcc_data$Patient.2177, hcc_data$Patient.2280, hcc_data$Patient.2556, hcc_data$Patient.2766,
+                    hcc_data$Patient.3196, hcc_data$Patient.3477)
+patient.ids = colnames(hcc_data)[2:length(colnames(hcc_data))] 
+patient.similarites = list()
+
+
+find.patient.similarity <- function()
+{
+  ans = sapply(patient.list, function(x)
+    {
+    sapply(patient.list, function(y)
+      {
+      as.character(hcc_data$GENES[x == y])
+    })
+    
+  })
+  return(ans)
+}
+ans = find.patient.similarity()
+
+

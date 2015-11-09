@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1445883639221.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "503C43B0",
+    "lastKnownWriteTime" : 0,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "d180njtzoi",
+        "caption" : "cancer.liver",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=cancer.liver&cache_key=d180njtzoi",
+        "displayedObservations" : "66452",
+        "environment" : "",
+        "object" : "cancer.liver",
+        "totalObservations" : "66452",
+        "variables" : "6"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,2 @@
+Dataset 7
+56 different metabolic tasks which must occur in all cell types and that the resulting model should be able to perform were defined. These 56 metabolic tasks were categorized as energy and redox (ER), internal conversions (IC), substrate utilization (SU) and biosynthesis of products (BS). For cancer cells, biomass growth (GR) was also included as a metabolic task.

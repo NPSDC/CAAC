@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1446735491253.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "DAB2779E",
+    "lastKnownWriteTime" : 33221976,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "cxn4zmprzd",
+        "caption" : "hepatocytes_all",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=hepatocytes_all&cache_key=cxn4zmprzd",
+        "displayedObservations" : "16612",
+        "environment" : "",
+        "object" : "hepatocytes_all",
+        "totalObservations" : "16612",
+        "variables" : "6"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}
