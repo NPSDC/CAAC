@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1447054917750.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "17FAF59C",
+    "lastKnownWriteTime" : 0,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "9qbgzmrydq",
+        "caption" : "scaled.data",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=scaled.data&cache_key=9qbgzmrydq",
+        "displayedObservations" : "6",
+        "environment" : "",
+        "object" : "scaled.data",
+        "totalObservations" : "6",
+        "variables" : "4936"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

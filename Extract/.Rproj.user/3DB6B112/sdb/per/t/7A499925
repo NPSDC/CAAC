@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1447051490332.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7A499925",
+    "lastKnownWriteTime" : 7011605692497750387,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "subtu68gpq",
+        "caption" : "Levels",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Levels&cache_key=subtu68gpq",
+        "displayedObservations" : 4936,
+        "environment" : "",
+        "object" : "Levels",
+        "totalObservations" : 4936,
+        "variables" : 6
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

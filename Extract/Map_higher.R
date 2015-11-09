@@ -110,4 +110,68 @@ find.patient.similarity <- function()
 }
 ans = find.patient.similarity()
 
+featurise <- function(Patient.levels, vals)
+{
+  Vectorised.levels = rep(-2, length(Patient.levels))
+  Vectorised.levels[Patient.levels == 'Weak'] = vals[2]
+  Vectorised.levels[Patient.levels == 'Moderate'] = vals[3]
+  Vectorised.levels[Patient.levels == 'Strong'] = vals[4]
+  Vectorised.levels[Patient.levels == 'Negative'] = vals[1]
+  return(Vectorised.levels)
+}
+get.featurised.levels <- function(patient.list, values)
+{
+  Levels = c()
+  Levels <- sapply(patient.list, function(x)
+    {
+      featurise(x, values)
+  })
+  names(Levels) <- patient.ids
+  return(Levels)
+}
+set.featurised.level <- function(main.data, Levels)
+{
+  Featurised.vec = hcc_data
+  Featurised.vec$Patient.2177 = Levels[,1]
+  Featurised.vec$Patient.2280 = Levels[,2]
+  Featurised.vec$Patient.2556 = Levels[,3]
+  Featurised.vec$Patient.2766 = Levels[,4]
+  Featurised.vec$Patient.3196 = Levels[,5]
+  Featurised.vec$Patient.3477 = Levels[,6]
+  return(Featurised.vec)
+}
+get.kmeans <- function(Levels)
+{
+  scaled.data = scale(t(Levels), scale=F)
+  no.of.clusters = c(2,3,4,5)
+  fits.kmeans = sapply(no.of.clusters, function(x)
+  {
+    kmeans(scaled.data, x)
+  }
+  )
+  return(fits.kmeans)
+}
+get.hcl <- function(Levels)
+{
+  scaled.data = scale(t(Levels), scale=F) 
+  distance <- dist(scaled.data)
+  hc <- hclust(distance)
+  plot(hc)
+}
+Levels.1 = get.featurised.levels(patient.list, c(-1, 0, 0.5, 1))
+Featurised.vec.1 = set.featurised.level(hcc_data, Levels.1)
 
+Levels.2 <- get.featurised.levels(patient.list, c(-1, 1, 1, 1))
+Featurised.vec.2 = set.featurised.level(hcc_data, Levels.2)
+
+fit.kmeans.1 = get.kmeans(Levels.1)
+fit.kmeans.2 = get.kmeans(Levels.2)
+
+get.hcl(Levels.1)
+get.hcl(Levels.2)
+
+hcc.data.complete = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0008-Dataset5/Dataset 5.csv')
+Levels.3 = get.featurised.levels(patient.list, c(-1, 1, 1, 1))
+Featurised.vec.3 = set.featurised.level(hcc_data, Levels.2)
+fit.kmeans.3 = get.kmeans(Levels.3)
+get.hcl(Levels.3)
