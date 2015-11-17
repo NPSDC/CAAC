@@ -175,3 +175,36 @@ Levels.3 = get.featurised.levels(patient.list, c(-1, 1, 1, 1))
 Featurised.vec.3 = set.featurised.level(hcc_data, Levels.2)
 fit.kmeans.3 = get.kmeans(Levels.3)
 get.hcl(Levels.3)
+
+#multi component analysis
+library(FactoMineR)
+fv1 = data.frame(t(hcc.data.complete))
+colnames(fv1) = fv1[1, ]
+fv1 = fv1[-c(1), ]
+res.mca <- MCA(fv1)
+
+library(org.Hs.eg.db)
+library(topGO)
+library(GOSim)
+library(mygene)
+library("biomaRt")
+
+get.entrez <- function(ensembl.ids)
+{
+  entrez.genes = c()
+  for(i in ensembl.ids)
+  {
+    all.genes = tryCatch({getGene(i, fields = 'entrezgene')}, error = function(err){})
+    #print(all.genes$entrezgene)
+    #print(i)
+    entrez.genes = c(entrez.genes,all.genes$entrezgene)
+  }
+  return(as.character(entrez.genes))
+}
+entrez.all.genes = get.entrez(hep.present)
+entrez.diff.exp.75 = get.entrez(diff.expressed$`75`)
+
+go <- GOenrichment(as.character(entrez.diff.exp.75), as.character(entrez.all.genes))
+
+
+
