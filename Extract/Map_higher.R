@@ -191,20 +191,47 @@ library("biomaRt")
 
 get.entrez <- function(ensembl.ids)
 {
-  entrez.genes = c()
+  entrez.genes = data.frame(entrez.id = as.character(rep(0, length(ensembl.ids))), 
+                            ensembl = as.character(rep(0, length(ensembl.ids))))
+  j = 1
+  entrez.genes$entrez.id = as.character(entrez.genes$entrez.id)
+  entrez.genes$ensembl = as.character(entrez.genes$ensembl)
   for(i in ensembl.ids)
   {
-    all.genes = tryCatch({getGene(i, fields = 'entrezgene')}, error = function(err){})
+    all.genes = tryCatch({getGene(i, fields = 'entrezgene') }, error = function(err){})
     #print(all.genes$entrezgene)
-    #print(i)
-    entrez.genes = c(entrez.genes,all.genes$entrezgene)
+    if(!is.null(all.genes$entrezgene))
+    {
+      entrez.genes$entrez.id[j] = as.character(all.genes$entrezgene)
+      entrez.genes$ensembl[j] <- i
+      j = j + 1
+    }
+    
   }
-  return(as.character(entrez.genes))
+  return(entrez.genes)
 }
+et = get.entrez(hep.present)
 entrez.all.genes = get.entrez(hep.present)
 entrez.diff.exp.75 = get.entrez(diff.expressed$`75`)
 
 go <- GOenrichment(as.character(entrez.diff.exp.75), as.character(entrez.all.genes))
+sim2 <- getGeneSim(entrez.diff.exp.75, similarityTerm = 'JiangConrath')
+disim <- 1 - sim2
 
+library(cluster)
+library(clusterSim)
+library(RFLPtools)
+sim2[which(is.nan(sim2))] = 0
+dist.diff.75 <- sim2dist(sim2, maxSim = 1)
+index.DB()
+hc.diff.75 <- hclust(dist.diff.75)
+plot(hc.diff.75)
 
+ak = pam(dist.diff.75, 8, diss = T)
+ev = evaluateClustering(ak$clustering, sim2)
+plot(ev$clustersil,main="")
+
+princ <- prcomp(t(Levels.3))
+princ$x
+plot(princ$x)
 
