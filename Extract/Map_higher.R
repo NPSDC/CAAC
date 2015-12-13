@@ -231,7 +231,68 @@ ak = pam(dist.diff.75, 8, diss = T)
 ev = evaluateClustering(ak$clustering, sim2)
 plot(ev$clustersil,main="")
 
+
+####Group wise clustering############
+do.go.enrich.clusters <- function(clust.object)
+{  
+  names.genes.clusters = sapply(seq_len(length(clust.object$medoids)), function(x)
+  {
+  names(clust.object$clustering)[which(clust.object$clustering == x)]  
+  })
+  names(names.genes.clusters) <- c("1", "2", "3", "4", "5", "6", "7", "8")
+  
+  go.analysis.cluster = sapply(names.genes.clusters, function(x)
+  {
+  GOenrichment(x, as.character(entrez.all.genes))
+  })
+  names(go.analysis.cluster) <- c("1", "2", "3", "4", "5", "6", "7", "8")
+  return(go.analysis.cluster)
+}
+go.analysis.clusters = do.go.enrich.clusters(ak)
+go.analysis.clusters = data.frame(go.analysis.clusters)
+
+go.analysis.clusters$X1$GOTerms$p.values = go.analysis.clusters$X1$p.values
+go.analysis.clusters$X1$GOTerms$Genes = go.analysis.clusters$X1$genes
+write.clusers <- function(go.clusters)
+{
+  go.clusters$X1$GOTerms = change.GOTerms(go.clusters$X1)
+  write.csv(go.clusters$X1$GOTerms, "clust1.csv")
+  go.clusters$X2$GOTerms = change.GOTerms(go.clusters$X2)
+  write.csv(go.clusters$X2$GOTerms, "clust2.csv")
+  go.clusters$X3$GOTerms = change.GOTerms(go.clusters$X3)
+  write.csv(go.clusters$X3$GOTerms, "clust3.csv")
+  go.clusters$X4$GOTerms = change.GOTerms(go.clusters$X4)
+  write.csv(go.clusters$X4$GOTerms, "clust4.csv")
+  go.clusters$X5$GOTerms = change.GOTerms(go.clusters$X5)
+  write.csv(go.clusters$X5$GOTerms, "clust5.csv")
+  go.clusters$X6$GOTerms = change.GOTerms(go.clusters$X6)
+  write.csv(go.clusters$X6$GOTerms, "clust6.csv")
+  go.clusters$X7$GOTerms = change.GOTerms(go.clusters$X7)
+  write.csv(go.clusters$X7$GOTerms, "clust7.csv")
+  go.clusters$X8$GOTerms = change.GOTerms(go.clusters$X8)
+  write.csv(go.clusters$X8$GOTerms, "clust8.csv")
+  return(go.clusters)
+  
+}
+change.GOTerms <- function(go.row)
+{
+  go.row$GOTerm$p.values = go.row$p.values
+  go.row$GOTerm$Genes = go.row$genes
+  return(go.row$GOTerm)
+}
+go.analysis.clusters = write.clusers(go.analysis.clusters)
+
 princ <- prcomp(t(Levels.3))
 princ$x
 plot(princ$x)
+
+for(i in seq_len((32)))
+{
+  if(sum(!is.na(match(unlist(go$genes[i]), na7))) != 0)
+  {
+    print (i)
+    #print("SUM")
+    #print(sum(!is.na(match(unlist(go$genes[i]), na))))
+  }
+}
 

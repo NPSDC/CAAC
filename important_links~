@@ -1,0 +1,17 @@
+http://www.proteinatlas.org/about/assays+annotation
+http://www.proteinatlas.org/ENSG00000000003-TSPAN6/gene
+http://www.uniprot.org/uniprot/O43657
+http://asia.ensembl.org/Multi/Search/Results?q=ENSG00000000003;site=ensembl
+
+http://www.uniprot.org/uploadlists/
+
+Genome Browser
+
+Problem
+How to compare cancer.liver and normal.liver?
+Former contains counts at all levels of the proteins while latter contains 2 types of cells and their concentration
+Further former contains cancer type and could it be a case that protein expresssed at higher concentrations in other tissue might lead to cancer in the tissue of interest
+
+David
+Genecodis
+Panther
