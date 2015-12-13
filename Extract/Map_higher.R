@@ -257,7 +257,7 @@ write.clusers <- function(go.clusters)
 {
   go.clusters$X1$GOTerms = change.GOTerms(go.clusters$X1)
   write.csv(go.clusters$X1$GOTerms, "clust1.csv")
-  go.clusters$X2$GOTerms = change.GOTerms(go.clusters$X2)
+  go.clusters$X2$GOTerms <- change.GOTerms(go.clusters$X2)
   write.csv(go.clusters$X2$GOTerms, "clust2.csv")
   go.clusters$X3$GOTerms = change.GOTerms(go.clusters$X3)
   write.csv(go.clusters$X3$GOTerms, "clust3.csv")
@@ -276,9 +276,11 @@ write.clusers <- function(go.clusters)
 }
 change.GOTerms <- function(go.row)
 {
-  go.row$GOTerm$p.values = go.row$p.values
-  go.row$GOTerm$Genes = go.row$genes
-  return(go.row$GOTerm)
+  
+  go.row$GOTerms$p.values = go.row$p.values
+  go.row$GOTerms$Genes = as.character(go.row$genes)
+  #go.row$GOTerms$genes
+  return(go.row$GOTerms)
 }
 go.analysis.clusters = write.clusers(go.analysis.clusters)
 
