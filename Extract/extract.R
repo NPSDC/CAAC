@@ -8,7 +8,7 @@ find.missing <- function(comp1, comp2)
 
 set.level <- function(cell.level, cell.conc, type)
 {
-  ##Input - Cell whose level has to be set; cell.conc is the types conc
+  ##Input - Cell whose level has to be set; cell.conc is the types conc, type-tells what to club
   #Output - sets it to high or low
   if(type == 1)
   {  
@@ -35,7 +35,7 @@ set.level <- function(cell.level, cell.conc, type)
      
     })
   }
-  
+  return(cell.level)
 }
 
 calculate.level <- function(threshold, count.high, count.low, vals)
