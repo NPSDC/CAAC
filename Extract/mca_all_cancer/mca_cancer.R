@@ -105,11 +105,21 @@ for(i in seq(length(unique.cancer.genes)))
 
 ###Starting with the mca analysis
 data.cancer.gene = t(cancer.all.gene.wise)
+data.cancer.gene = data.cancer.gene[-1, ]
 data.cancer.gene = data.frame(data.cancer.gene)
+colnames(data.cancer.gene) = cancer.all.gene.wise$Gene
+not.na.cols = setdiff(cancer.all.gene.wise$Gene, genes.not.all)
+data.cancer.gene = data.cancer.gene[, not.na.cols]
+data.cancer.gene = data.frame(data.cancer.gene, stringsAsFactors = F)
 View(data.cancer.gene)
 library(FactoMineR)
+library(factoextra)
 mca.data.cancer <- MCA(data.cancer.gene, ind.sup = 1)
-
+res.mca.cancer <- MCA(data.cancer.gene)
+fviz_screeplot(res.mca.cancer) #1st 2 dim above 1/19
+plot(res.mca.cancer)
+fviz_mca_biplot(res.mca.cancer)
+fviz_mca_ind(res.mca.cancer)
 #Learning MCA (Refer important links)
 #library(FactoMineR)
 #library(factoextra)

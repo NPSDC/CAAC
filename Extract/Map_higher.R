@@ -217,12 +217,13 @@ entrez.diff.exp.75 = get.entrez(diff.expressed$`75`)
 go <- GOenrichment(as.character(entrez.diff.exp.75), as.character(entrez.all.genes))
 sim2 <- getGeneSim(entrez.diff.exp.75, similarityTerm = 'JiangConrath')
 disim <- 1 - sim2
-
+disim <- read.table('disim_75_expressed.txt')
+sim2 <- 1-disim
 library(cluster)
 library(clusterSim)
 library(RFLPtools)
-sim2[which(is.nan(sim2))] = 0
-dist.diff.75 <- sim2dist(sim2, maxSim = 1)
+sim2[which(is.nan(1 - sim2))] = 0
+dist.diff.75 <- sim2dist(as.matrix(sim2), maxSim = 1)
 index.DB()
 hc.diff.75 <- hclust(dist.diff.75)
 plot(hc.diff.75)
