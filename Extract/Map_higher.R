@@ -1,4 +1,4 @@
-  hcc_data = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
+hcc_data = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
 lev = levels(hcc_data$Patient.2177)
 genes = as.character(hcc_data$GENES[which( hcc_data$Patient.2177 == lev[3] | hcc_data$Patient.2177 == lev[1] | 
                                       hcc_data$Patient.2177 == lev[4])]) #contains genes present(high,med,low) in patient 1

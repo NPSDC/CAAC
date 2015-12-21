@@ -120,6 +120,31 @@ fviz_screeplot(res.mca.cancer) #1st 2 dim above 1/19
 plot(res.mca.cancer)
 fviz_mca_biplot(res.mca.cancer)
 fviz_mca_ind(res.mca.cancer)
+
+metabolic.genes = read.delim('mca_all_cancer/metabolic_genes.txt', header = F)
+metabolic.genes = as.character(metabolic_genes$V1[1:3750])
+#Contains genes that are present in my data cancer
+metabolic.genes.not.present = metabolic.genes[which(is.na(match(metabolic.genes, colnames(data.cancer.gene))))]
+metabolic.genes.present = setdiff(metabolic.genes, metabolic.genes.not.present)
+data.metabolic.genes = data.cancer.gene[, match(metabolic.genes.present, colnames(data.cancer.gene))]
+View(data.metabolic.genes)
+res.mca.cancer.metabolic = MCA(data.metabolic.genes)
+fviz_screeplot(res.mca.cancer.metabolic)
+fviz_mca_biplot(res.mca.cancer.metabolic, select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6))
+
+metabolic.genes.present.graph = sapply(metabolic.genes.present, function(x)
+  {
+  paste(x, '_Present', sep = '')
+})
+metabolic.genes.present.graph.abs = sapply(metabolic.genes.present, function(x)
+{
+    paste(x, '_Not detected', sep = '')
+})
+metabolic.genes.present.graph = c(metabolic.genes.present.graph, metabolic.genes.present.graph.abs)
+remove(metabolic.genes.present.graph.abs)
+fviz_mca_biplot(res.mca.cancer, label = 'var',  select.var = list(name = c('ENSG00000000419_Present', 'ENSG00000000938_Not detected')),col.var = 'red')
+fviz_mca_biplot(res.mca.cancer, geom = c('text', 'arrow'),  select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6), axes = 1:2 )
+fviz_mca_biplot(res.mca.cancer, map = 'rowprincipal',  geom = c('text', 'arrow'),  select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6), axes = 1:2 )
 #Learning MCA (Refer important links)
 #library(FactoMineR)
 #library(factoextra)
@@ -159,3 +184,52 @@ fviz_mca_ind(res.mca.cancer)
 #                      high="red", midpoint=0.85)+theme_minimal()
 #fviz_mca_biplot(res.mca, map ="rowprincipal", arrow = c(TRUE, TRUE))
 
+
+###Hierarchical Clustering
+res.cancer.hcpc <- HCPC(res.mca.cancer)
+res.cancer.metabolic.hcpc <- HCPC(res.mca.cancer.metabolic)
+#res.cancer.hcpc$data.clust its last column contains the cluster to which that row belongs along with the original info
+#res.cancer.hcpc$desc.var
+#res.cancer.hcpc$desc.ind
+#res.cancer.hcpc$call
+#res.cancer.hcpc$desc.axes
+plot(res.cancer.hcpc, axes = c(1,2))
+
+###MCA patient wise
+hepatocytes = read.csv('hepatocytes.csv')
+hcc.data.complete = read.csv('~/Dropbox/honours/Extract/hcc_data/msb145122-sup-0008-Dataset5/Dataset 5.csv', stringsAsFactors = F)
+indexes.match.hep =  match(hcc.data.complete$GENES, hepatocytes$Gene) #Contains the match of indexes of hcc in hepatocytes
+hcc.data.complete = transform(hcc.data.complete, HPA.50 = as.character(hepatocytes$Canc.Level.50[indexes.match.hep]))
+
+levels(hcc.data.complete$HPA.50) = c(levels(hcc.data.complete$HPA.50), 'None')
+hcc.data.complete$HPA.50[hcc.data.complete$HPA.50 == 'Not detected'] = 'None'
+
+data.hcc.complete = t(hcc.data.complete)
+data.hcc.complete = data.frame(data.hcc.complete)
+View(data.hcc.complete)
+data.hcc.complete = data.hcc.complete[-1,]
+
+change.vals.rows <- function(data, orig.vals, rep.vals)
+  ###This function changes the vals row wise and replaces them with rep.vals
+  ###data - data.frame on which to be acted
+  ###orig.vals - types of vals in rows,a vector
+  ###rep.vals - vals orig.vals to be replaced with, a vector(Note orig.vals and rep.vals should
+  ###have same length)
+  ###eg if in data (orig vals) 'Present' and 'None' is present and in rep.vals 'N' and 'P' replace
+  ###them orig vals with rep.vals
+{
+  no.cols = length(colnames(data))
+  for(i in seq(no.cols))
+  {
+    levels(data[,i]) = c(levels(data[,i]), rep.vals)
+    for(j in seq(length(orig.vals)))
+        data[, i][which(data[, i] == orig.vals[j])] = rep.vals[j]
+  }
+  return(data)
+}
+data.hcc.complete = change.vals.rows(data.hcc.complete, c('Present', 'None'), c('P', 'N'))
+res.mca.hcc = MCA(data.hcc.complete)
+fviz_screeplot(res.mca.hcc)
+fviz_mca_biplot(res.mca.hcc, select.var = list(cos2 = 20), geom = c('arrow', 'text'))
+res.hcpc.hcc = HCPC(res.mca.hcc)
+plot(res.hcpc.hcc, choice = 'tree')
