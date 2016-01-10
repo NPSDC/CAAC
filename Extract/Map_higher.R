@@ -1,4 +1,4 @@
-hcc_data = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
+hcc_data = read.csv('~/Dropbox/honours/Extract/hcc_data/msb145122-sup-0006-Dataset3/Dataset 3.csv')
 lev = levels(hcc_data$Patient.2177)
 genes = as.character(hcc_data$GENES[which( hcc_data$Patient.2177 == lev[3] | hcc_data$Patient.2177 == lev[1] | 
                                       hcc_data$Patient.2177 == lev[4])]) #contains genes present(high,med,low) in patient 1
@@ -170,7 +170,7 @@ fit.kmeans.2 = get.kmeans(Levels.2)
 get.hcl(Levels.1)
 get.hcl(Levels.2)
 
-hcc.data.complete = read.csv('C:/Users/NoorPratap/Dropbox/honours/Extract/hcc_data/msb145122-sup-0008-Dataset5/Dataset 5.csv')
+hcc.data.complete = read.csv('~/Dropbox/honours/Extract/hcc_data/msb145122-sup-0008-Dataset5/Dataset 5.csv')
 Levels.3 = get.featurised.levels(patient.list, c(-1, 1, 1, 1))
 Featurised.vec.3 = set.featurised.level(hcc_data, Levels.2)
 fit.kmeans.3 = get.kmeans(Levels.3)
@@ -217,13 +217,19 @@ entrez.diff.exp.75 = get.entrez(diff.expressed$`75`)
 go <- GOenrichment(as.character(entrez.diff.exp.75), as.character(entrez.all.genes))
 sim2 <- getGeneSim(entrez.diff.exp.75, similarityTerm = 'JiangConrath')
 disim <- 1 - sim2
-disim <- read.table('disim_75_expressed.txt')
+disim <- read.table('differentially_expressed/disim')
 sim2 <- 1-disim
+
 library(cluster)
 library(clusterSim)
 library(RFLPtools)
-sim2[which(is.nan(1 - sim2))] = 0
-dist.diff.75 <- sim2dist(as.matrix(sim2), maxSim = 1)
+sim2[which(is.na(sim2))] = 0
+for(i in seq(length(rownames(sim2))))
+{
+  ind = which(is.na(sim2[i,]))
+  sim2[i,ind] = 0
+}
+dist.diff.75 <- sim2dist(as.matrix(sim2))
 index.DB()
 hc.diff.75 <- hclust(dist.diff.75)
 plot(hc.diff.75)
@@ -234,20 +240,29 @@ plot(ev$clustersil,main="")
 
 
 ####Group wise clustering############
-do.go.enrich.clusters <- function(clust.object)
-{  
+do.group.wise.clustering <- function(clust.object)
+{
   names.genes.clusters = sapply(seq_len(length(clust.object$medoids)), function(x)
   {
-  names(clust.object$clustering)[which(clust.object$clustering == x)]  
+    names(clust.object$clustering)[which(clust.object$clustering == x)]  
   })
   names(names.genes.clusters) <- c("1", "2", "3", "4", "5", "6", "7", "8")
-  
+  return(names.genes.clusters)
+}
+do.go.enrich.clusters <- function(clust.object)
+{  
+  names.genes.clusters = do.group.wise.clustering(clust.object )
   go.analysis.cluster = sapply(names.genes.clusters, function(x)
   {
   GOenrichment(x, as.character(entrez.all.genes))
   })
   names(go.analysis.cluster) <- c("1", "2", "3", "4", "5", "6", "7", "8")
   return(go.analysis.cluster)
+}
+names.gene.cluster = do.group.wise.clustering(ak)
+for(i in seq(8))
+{
+  write(names.gene.cluster[[i]], paste('cluster', i, '.txt', sep = ''))
 }
 go.analysis.clusters = do.go.enrich.clusters(ak)
 go.analysis.clusters = data.frame(go.analysis.clusters)

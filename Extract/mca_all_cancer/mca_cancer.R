@@ -114,7 +114,7 @@ data.cancer.gene = data.frame(data.cancer.gene, stringsAsFactors = F)
 View(data.cancer.gene)
 library(FactoMineR)
 library(factoextra)
-mca.data.cancer <- MCA(data.cancer.gene, ind.sup = 1)
+
 res.mca.cancer <- MCA(data.cancer.gene)
 fviz_screeplot(res.mca.cancer) #1st 2 dim above 1/19
 plot(res.mca.cancer)
@@ -143,8 +143,11 @@ metabolic.genes.present.graph.abs = sapply(metabolic.genes.present, function(x)
 metabolic.genes.present.graph = c(metabolic.genes.present.graph, metabolic.genes.present.graph.abs)
 remove(metabolic.genes.present.graph.abs)
 fviz_mca_biplot(res.mca.cancer, label = 'var',  select.var = list(name = c('ENSG00000000419_Present', 'ENSG00000000938_Not detected')),col.var = 'red')
-fviz_mca_biplot(res.mca.cancer, geom = c('text', 'arrow'),  select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6), axes = 1:2 )
-fviz_mca_biplot(res.mca.cancer, map = 'rowprincipal',  geom = c('text', 'arrow'),  select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6), axes = 1:2 )
+fviz_mca_var(res.mca.cancer, label = 'none', select.var = list(name = metabolic.genes.present.graph, cos2 = 0.0), axes = 1:2 )
+fviz_mca_biplot(res.mca.cancer, map = 'rowprincipal', label = 'none', select.var = list(name = metabolic.genes.present.graph, cos2 = 0.6), axes = 1:2) + 
+theme_minimal()  
+
+fviz_mca_ind(res.mca.cancer.metabolic)
 #Learning MCA (Refer important links)
 #library(FactoMineR)
 #library(factoextra)
@@ -193,8 +196,8 @@ res.cancer.metabolic.hcpc <- HCPC(res.mca.cancer.metabolic)
 #res.cancer.hcpc$desc.ind
 #res.cancer.hcpc$call
 #res.cancer.hcpc$desc.axes
-plot(res.cancer.hcpc, axes = c(1,2))
-
+plot(res.cancer.hcpc, axes = c(1,2), choice = 'tree', title = 'Clustering')
+plot(res.cancer.metabolic.hcpc,  choice = 'tree', title = 'Clustering')
 ###MCA patient wise
 hepatocytes = read.csv('hepatocytes.csv')
 hcc.data.complete = read.csv('~/Dropbox/honours/Extract/hcc_data/msb145122-sup-0008-Dataset5/Dataset 5.csv', stringsAsFactors = F)
@@ -232,4 +235,17 @@ res.mca.hcc = MCA(data.hcc.complete)
 fviz_screeplot(res.mca.hcc)
 fviz_mca_biplot(res.mca.hcc, select.var = list(cos2 = 20), geom = c('arrow', 'text'))
 res.hcpc.hcc = HCPC(res.mca.hcc)
-plot(res.hcpc.hcc, choice = 'tree')
+plot(res.hcpc.hcc, choice = 'tree', title = 'Clustering')
+
+####Genes for which all cancers have same values
+pos.vals = c('Present', 'Not detected')
+genes.same = c()
+for(i in seq(length(genes.all)))
+{
+  if(sum(data.cancer.gene[,i] == pos.vals[1]) == 20  || sum(data.cancer.gene[,i] == pos.vals[2]) == 20)
+    genes.same = c(genes.same, genes.all[i])
+}
+indexes.match.same = match(genes.same, genes.all) #indexes of genes for which all cancers have
+#same concentration in colnames(data.cancer.gene)
+res.mca.cancer.same = MCA(data.cancer.gene[,indexes.match.same])
+
