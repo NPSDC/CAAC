@@ -261,7 +261,7 @@ get.entrez <- function(filename)
     strsplit(x, split = ';')
   }))
   new_list = strsplit(filename, split = '/')
-  new_list[[1]][length(new_list[[1]])] = 'entrez.genes.txt'
+  new_list[[1]][length(new_list[[1]])] = 'entrez_genes.txt'
   write(biological.process.genes.entrez, paste(new_list[[1]], collapse = '/'))
 }
 
@@ -271,33 +271,72 @@ get.ensembl <- function(filename)
   cell.cycle.genes.ensembl <- unique(cell.cycle.ensembl[,1]) #column 1 is ensembl ids in data frame
   return(cell.cycle.genes.ensembl)  
 }
-get.entrez('mca_all_cancer/cell_cycle/uniprot-cell+cycle.xls')
-cell.cycle.genes.ensembl <- get.ensembl('mca_all_cancer/cell_cycle/ensembl.csv')
+
 
 ###Generalised BP
-biological.processes <- c('cell_cycle', 'apoptosis')
-lapply(biological.processes, function(x)
+get.final.entez <- function(biological.processes)
+{
+  lapply(biological.processes, function(x)
   {
-  file = 'mca_all_cancer/cell/uniprot.xls'
-  new_path = strsplit(file, split = '/')
-  new_path[[1]][2] = x
-  get.entrez(paste(new_path[[1]], collapse = '/'))
-})
-
-bp.genes.ensembl <- lapply(biological.processes, function(x)
+    file = 'mca_all_cancer/cell/uniprot.xls'
+    new_path = strsplit(file, split = '/')
+    new_path[[1]][2] = x
+    get.entrez(paste(new_path[[1]], collapse = '/'))
+  })
+}
+get.final.ensembl <- function(biological.processes)
+{
+  bp.genes.ensembl <- lapply(biological.processes, function(x)
   {
-  file = 'mca_all_cancer/cell/ensembl.csv'
-  new_path = strsplit(file, split = '/')
-  new_path[[1]][2] = x
-  get.ensembl(paste(new_path[[1]], collapse = '/'))
-})
-names(bp.genes.ensembl) <- biological.processes
+    file = 'mca_all_cancer/cell/ensembl.csv'
+    new_path = strsplit(file, split = '/')
+    new_path[[1]][2] = x
+    get.ensembl(paste(new_path[[1]], collapse = '/'))
+  })
+  names(bp.genes.ensembl) <- biological.processes
+  return(bp.genes.ensembl)
+}
+biological.processes <- c('apoptosis', 'cell_adhesion', 'cell_cycle', 'immune_response', 
+                          'metabolic', 'signal_transduction', 'transport')
+get.final.entez(biological.processes)
+bp.genes.ensembl <- get.final.ensembl(biological.processes)
 
+find.genes.absent <-function(bp.genes.ensembl, all.genes)
+{
+  genes.absent = sapply(bp.genes.ensembl, function(x)
+    {
+      x[which(is.na(match(x, all.genes)))]
+  })
+  names(genes.absent) = names(bp.genes.ensembl)
+  return(genes.absent)
+}
+genes.absent.ensembl <- find.genes.absent(bp.genes.ensembl, colnames(data.cancer.gene))
 which(is.na(match(cell.cycle.genes.ensembl, cancer.all.gene.wise$Gene)))
 cell.cycle.genes.absent <- cell.cycle.genes.ensembl[which(is.na(match(cell.cycle.genes.ensembl, cancer.all.gene.wise$Gene)))]
 
+get.data.set.mca <-function(bp.genes.ensembl.all, bp.genes.ensembl.absent, data.cancer.gene)
+{
+  genes.present = mapply(function(x,y)
+  {
+    setdiff(x,y)
+  }, bp.genes.ensembl.all, bp.genes.ensembl.absent)
+  names(genes.present) = names(bp.genes.ensembl)
+  data.frame.mca = list()
+  
+  for(i in seq(length(genes.present)))
+  {
+  # print(sum(is.na(match(genes.present[[i]], colnames(data.cancer.gene)))))
+    data.frame.mca[[i]] = data.cancer.gene[, match(genes.present[[i]], colnames(data.cancer.gene))]
+  #print(i*10)
+  }
+  names(data.frame.mca) = names(bp.genes.ensembl.all)
+  return(data.frame.mca)
+}
+data.frame.mca <- get.data.set.mca(bp.genes.ensembl, genes.absent.ensembl, data.cancer.gene)
 
-cell.cycle.genes.mca <- setdiff(cell.cycle.genes.ensembl, cell.cycle.genes.absent)
-data.cancer.cell.cycle <- data.cancer.gene[, match(cell.cycle.genes.mca, colnames(data.cancer.gene))]
-res.mca.cancer.cell.cycle <- MCA(data.cancer.cell.cycle)
-fviz_mca_ind(res.mca.cancer.cell.cycle)
+res.mca.bp <- lapply(data.frame.mca, MCA)
+names(res.mca.bp) <- names(data.frame.mca)
+fviz_mca_ind(res.mca.bp$transport)
+
+res.hcpc.bp <-lapply(res.mca.bp, HCPC)
+names(res.mca.bp) <- names(data.frame.mca)
