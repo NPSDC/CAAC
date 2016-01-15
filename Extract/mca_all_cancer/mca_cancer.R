@@ -249,3 +249,55 @@ indexes.match.same = match(genes.same, genes.all) #indexes of genes for which al
 #same concentration in colnames(data.cancer.gene)
 res.mca.cancer.same = MCA(data.cancer.gene[,indexes.match.same])
 
+
+
+###CELL CYCLE
+get.entrez <- function(filename)
+{
+  biological.process <- read.delim(filename)
+  biological.process.genes.list <- as.character(unique(biological.process[,4]))#column 4 is entrez ids
+  biological.process.genes.entrez <- unlist(sapply(biological.process.genes.list, function(x)
+  {
+    strsplit(x, split = ';')
+  }))
+  new_list = strsplit(filename, split = '/')
+  new_list[[1]][length(new_list[[1]])] = 'entrez.genes.txt'
+  write(biological.process.genes.entrez, paste(new_list[[1]], collapse = '/'))
+}
+
+get.ensembl <- function(filename)
+{
+  cell.cycle.ensembl <- read.csv(filename)
+  cell.cycle.genes.ensembl <- unique(cell.cycle.ensembl[,1]) #column 1 is ensembl ids in data frame
+  return(cell.cycle.genes.ensembl)  
+}
+get.entrez('mca_all_cancer/cell_cycle/uniprot-cell+cycle.xls')
+cell.cycle.genes.ensembl <- get.ensembl('mca_all_cancer/cell_cycle/ensembl.csv')
+
+###Generalised BP
+biological.processes <- c('cell_cycle', 'apoptosis')
+lapply(biological.processes, function(x)
+  {
+  file = 'mca_all_cancer/cell/uniprot.xls'
+  new_path = strsplit(file, split = '/')
+  new_path[[1]][2] = x
+  get.entrez(paste(new_path[[1]], collapse = '/'))
+})
+
+bp.genes.ensembl <- lapply(biological.processes, function(x)
+  {
+  file = 'mca_all_cancer/cell/ensembl.csv'
+  new_path = strsplit(file, split = '/')
+  new_path[[1]][2] = x
+  get.ensembl(paste(new_path[[1]], collapse = '/'))
+})
+names(bp.genes.ensembl) <- biological.processes
+
+which(is.na(match(cell.cycle.genes.ensembl, cancer.all.gene.wise$Gene)))
+cell.cycle.genes.absent <- cell.cycle.genes.ensembl[which(is.na(match(cell.cycle.genes.ensembl, cancer.all.gene.wise$Gene)))]
+
+
+cell.cycle.genes.mca <- setdiff(cell.cycle.genes.ensembl, cell.cycle.genes.absent)
+data.cancer.cell.cycle <- data.cancer.gene[, match(cell.cycle.genes.mca, colnames(data.cancer.gene))]
+res.mca.cancer.cell.cycle <- MCA(data.cancer.cell.cycle)
+fviz_mca_ind(res.mca.cancer.cell.cycle)

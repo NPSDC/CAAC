@@ -80,4 +80,22 @@ reduce.levels <- function(canc.name, levels, combine.conc)
   }
   return(canc.specific)
 }
-renal.mod.canc = reduce.levels('renal cancer', c('Present', 'Not detected'), list('Present', 'Not detected'))
+renal.mod.canc = reduce.levels('renal cancer', c('Present', 'Not detected'),
+                               list('Present', 'Not detected'))
+glioma.mod.canc = reduce.levels('glioma', c('Present', 'Not detected'),
+                                list('Present', 'Not detected'))
+lymphoma.mod.canc = reduce.levels('lymphoma', c('Present', 'Not detected'), 
+                                  list('Present', 'Not detected'))
+
+all.cancers <- cancer.all.gene.wise[,c("Gene","Giloma.Cancer",'Liver.Cancer', 'Lymphoma.Cancer', 'Renal.Cancer')]
+data.all.cancers <- t(all.cancers)
+colnames(data.all.cancers) <- all.cancers$Gene
+data.all.cancers <- data.all.cancers[-1,]
+
+library(FactoMineR)
+library(factoextra)
+
+mca.4.canc <- MCA(data.all.cancers)
+hcpc.4.canc <- HCPC(mca.4.canc)
+
+
