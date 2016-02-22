@@ -340,3 +340,16 @@ fviz_mca_ind(res.mca.bp$transport)
 
 res.hcpc.bp <-lapply(res.mca.bp, HCPC)
 names(res.mca.bp) <- names(data.frame.mca)
+
+length(setdiff(colnames(data.cancer.gene), genes.present))
+which(is.na(match(g, colnames(data.cancer.gene))))
+
+g1 = intersect(colnames(data.cancer.gene), lymp.match$Liver.Cancer)
+g1 = intersect(g1, lymp.match$Renal.Cancer)
+g1 = intersect(g1, lymp.match$Giloma.Cancer)
+d2 = data.cancer.gene[, match(g1, colnames(data.cancer.gene))]
+
+#Comparing liver and renal
+df.common.renal.liver = data.frame.mca$metabolic[, match(metabolic.liver.mat$Renal.Cancer, colnames(data.frame.mca$metabolic))]
+res.mca.common.liver.renal = MCA(df.common.renal.liver)
+fviz_mca_ind(res.mca.common.liver.renal)

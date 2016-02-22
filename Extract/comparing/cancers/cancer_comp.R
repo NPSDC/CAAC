@@ -97,5 +97,195 @@ library(factoextra)
 
 mca.4.canc <- MCA(data.all.cancers)
 hcpc.4.canc <- HCPC(mca.4.canc)
+find.sim <- function(data.frame.main,gene.index, whom.match.index, to.matched.index)
+{
+   ans <- lapply(to.matched.index, function(x)
+   {
+     data.frame.main[,gene.index][data.frame.main[,whom.match.index] == data.frame.main[,x]]
+   }
+     )
+   names(ans) = colnames(data.frame.main)[to.matched.index]
+   return(ans)
+}
+liver.match = find.sim(all.cancers, 1, 3, c(2,4,5))
+giloma.match = find.sim(all.cancers, 1, 2, c(3,4,5))
+lymp.match = find.sim(all.cancers, 1, 4, c(2,3,5))
+renal.match = find.sim(all.cancers, 1, 5, c(2,3,4))
 
+bp.data.frame = list()
+for(i in seq(length(data.frame.mca)))
+{
+  bp.data.frame[[i]] = t(data.frame.mca[[i]])
+  bp.data.frame[[i]] = data.frame(bp.data.frame[[i]])
+  bp.data.frame[[i]]$Gene = rownames(bp.data.frame[[i]])
+}
+names(bp.data.frame) = biological.processes
+
+bp.liver.match = lapply(bp.data.frame, function(x)
+  {
+    find.sim(x, 21, 8, c(6, 10, 15))
+})
+names(bp.liver.match) = biological.processes
+
+bp.liver.intersect = lapply(bp.liver.match, function(x) #contains all the common genes for all bps for 
+  {                                                     #4 bps
+  intersect(intersect(x[[1]], x[[2]]), x[[3]])
+})
+names(bp.liver.intersect) = biological.processes
+
+lengths.bp.intersect = lapply(bp.liver.intersect, length)
+names(lengths.bp.intersect) = biological.processes
+
+#contains genes common across 4 types in all biological processes
+genes.all.common = intersect(intersect(colnames(data.cancer.gene),liver.match$Giloma.Cancer), 
+                             intersect(liver.match$Lymphoma.Cancer, liver.match$Renal.Cancer))
+genes.union = union(union(union(union(bp.liver.intersect$apoptosis, bp.liver.intersect$cell_adhesion), 
+                                union(bp.liver.intersect$cell_cycle, bp.liver.intersect$immune_response)),
+                          union(bp.liver.intersect$metabolic,bp.liver.intersect$signal_transduction)),
+                    bp.liver.intersect$transport)
+data.frame.gene.union = data.cancer.gene[, match(genes.union, colnames(data.cancer.gene))]
+
+res.mca.union = MCA(data.frame.gene.union)
+fviz_mca_ind(res.mca.union)
+
+data.frame.common.bps = lapply(bp.liver.intersect, function(x)  ##contains the data frame which contains
+  #genes that are common in 4 cancersprocess wise 
+  {
+  data.cancer.gene[,match(x, colnames(data.cancer.gene))]
+})
+names(data.frame.common.bps) = biological.processes
+
+res.mca.common.bps = lapply(data.frame.common.bps, MCA)
+names(res.mca.common.bps) = biological.processes
+
+fviz_mca_ind(res.mca.common.bps$transport)
+
+
+data.frame.gene.except.union = data.cancer.gene[, match(setdiff(colnames(data.cancer.gene), genes.union)
+                                                        , colnames(data.cancer.gene))]
+res.mca.except.union = MCA(data.frame.gene.except.union)
+fviz_mca_ind(res.mca.except.union)
+
+
+
+#####Finding difference b/w renal and liver #####################
+diff.expressed.absent = mapply(setdiff, diff.expressed, diff.expressed.present)
+liver.diff = lapply(liver.match, function(x) #contains disimilar genes b/w liver and other cancers
+  {
+    setdiff(all.cancers$Gene, x)
+})
+names(liver.diff) = names(liver.match)
+
+liver.diff.up = lapply(liver.diff, function(x)
+  {
+  genes.diff.present = all.cancers$Gene[which(all.cancers$Liver.Cancer == 'Present')]
+  x[!is.na(match(x, genes.diff.present))]
+})
+names(liver.diff.up) = names(liver.match)
+
+liver.diff.down = mapply(setdiff, liver.diff, liver.diff.up)
+names(liver.diff.down) = names(liver.match)
+
+liver.diff.up.actual = lapply(liver.diff.up, function(x)
+  {
+  intersect(x, diff.expressed.present$`50`)
+})
+names(liver.diff.up.actual) = names(liver.match)
+
+liver.diff.down.actual = lapply(liver.diff.down, function(x)
+  {
+    setdiff(x, diff.expressed.absent$`50`)
+})
+names(liver.diff.down.actual) = names(liver.match)
+
+write(liver.diff.down$Renal.Cancer, 'comparing/cancers/liver/liver_renal_down.txt')
+write(liver.diff.up$Renal.Cancer, 'comparing/cancers/liver/liver_renal_up.txt')
+write(liver.diff.up.actual$Renal.Cancer, 'comparing/cancers/liver/liver_renal_up_actual.txt')
+write(liver.diff.down.actual$Renal.Cancer, 'comparing/cancers/liver/liver_renal_down_actual.txt')
+
+###Finding difference b/w  processes
+common.cell.metabolic = intersect(bp.genes.ensembl$cell_cycle, bp.genes.ensembl$metabolic)
+not.common.cell.metabolic = setdiff(union(bp.genes.ensembl$cell_cycle, bp.genes.ensembl$metabolic),
+                                    common.cell.metabolic)
+metabolic.unique = setdiff(bp.genes.ensembl$metabolic, common.cell.metabolic)
+cell.cycle.unique = setdiff(bp.genes.ensembl$cell_cycle, common.cell.metabolic)
+data.frame.mca.common.cellcycle.metabolic = 
+  data.cancer.gene[, match(intersect(common.cell.metabolic, colnames(data.cancer.gene)),
+                           colnames(data.cancer.gene))]
+data.frame.mca.not.common.cellcycle.metabolic = 
+  data.cancer.gene[, match(intersect(not.common.cell.metabolic, colnames(data.cancer.gene)),
+                           colnames(data.cancer.gene))]
+data.frame.mca.metabolic.unique = data.cancer.gene[,match(intersect(metabolic.unique, colnames(data.cancer.gene)),
+                                                          colnames(data.cancer.gene))][1:200]
+data.frame.mca.cell_cycle.unique = data.cancer.gene[, match(intersect(cell.cycle.unique, colnames(data.cancer.gene)), 
+                                                            colnames(data.cancer.gene))][1:400]
+
+res.mca.not.common.cellcycle.metabolic = MCA(data.frame.mca.not.common.cellcycle.metabolic)
+res.mca.common.cellcycle.metabolic = MCA(data.frame.mca.common.cellcycle.metabolic)                                             
+res.mca.common.metabolic.unique = MCA(data.frame.mca.metabolic.unique)
+res.mca.common.cell_cycle.unqiue= MCA(data.frame.mca.cell_cycle.unique)
+  
+fviz_mca_ind(res.mca.common.cellcycle.metabolic)
+fviz_mca_ind(res.mca.not.common.cellcycle.metabolic)
+fviz_mca_ind(res.mca.common.metabolic.unique)
+fviz_mca_ind(res.mca.common.cell_cycle.unqiue)
+
+common.signal.metabolic = intersect(bp.genes.ensembl$metabolic, bp.genes.ensembl$signal_transduction)
+not.common.signal.metabolic = setdiff(union(bp.genes.ensembl$metabolic, 
+                                            bp.genes.ensembl$signal_transduction), 
+                                      common.signal.metabolic)
+signal.unique = setdiff(bp.genes.ensembl$signal_transduction, common.signal.metabolic)
+  
+data.frame.mca.not.common.signal.metabolic = 
+  data.cancer.gene[, match(intersect(not.common.signal.metabolic, colnames(data.cancer.gene)),
+                           colnames(data.cancer.gene))]
+data.frame.mca.common.signal.metabolic = 
+  data.cancer.gene[, match(intersect(common.signal.metabolic, colnames(data.cancer.gene)),
+                           colnames(data.cancer.gene))]
+data.frame.mca.signal.unique = 
+  data.cancer.gene[, match(intersect(signal.unique, colnames(data.cancer.gene)),
+                           colnames(data.cancer.gene))][1:550]
+
+res.mca.not.common.signal.metabolic = MCA(data.frame.mca.not.common.signal.metabolic)
+res.mca.common.signal.metabolic = MCA(data.frame.mca.common.signal.metabolic)
+res.mca.signal.unique = MCA(data.frame.mca.signal.unique)
+
+fviz_mca_ind(res.mca.not.common.signal.metabolic)
+fviz_mca_ind(res.mca.common.signal.metabolic)
+fviz_mca_ind(res.mca.signal.unique)
+
+data.frame.mca.common.all = data.cancer.gene[, match(intersect(setdiff(bp.genes.ensembl$cell_cycle,int3), colnames(data.cancer.gene)),
+                                                              colnames(data.cancer.gene))]
+
+###random sequences####
+res.mca.common.all = MCA(data.frame.mca.common.all)
+fviz_mca_ind(res.mca.common.all)
+indexes.rand = list()
+indexes.rand.100 = list()
+indexes.rand.500 = list()
+for(i in seq(10))
+{
+  i = 1
+  ind = sort(sample(seq(length(colnames(data.cancer.gene))), 500))
+  data.frame.mca.trial = data.cancer.gene[, ind]
+  res.mca.trial = MCA(data.frame.mca.trial, graph = F)
+  indexes.rand.500[[i]] = ind
+  fviz_mca_ind(res.mca.trial)
+  dev.copy(png, paste(toString(i),'.png'))
+  dev.off()
+  i = i + 1
+}
+#cell.cycle.kegg = read.delim('Human_cellcycle_kegg.txt')
+write(cell.cycle.kegg$GeneID, 'cell_cycle_kegg_ensg.txt', ncolumns = 1)
+cell.cycle.ens= read.csv('comparing/cell_cycle_ensembl.csv')
+cell.cycle.ens = cell.cycle.ens$Ensembl.Gene.ID
+cell.cycle.ens =  as.character(cell.cycle.ens)
+intersect(cell.cycle.ens, colnames(data.cancer.gene))
+data.frame.mca.cell.cycle = data.cancer.gene[,
+  sort(match(intersect(cell.cycle.ens, colnames(data.cancer.gene)), colnames(data.cancer.gene)))]
+res.mca.cell.cycle = MCA(data.frame.mca.cell.cycle)
+fviz_mca_ind(res.mca.cell.cycle)
+hcpc.cell.cycle = HCPC(res.mca.cell.cycle)
+
+data.frame.all.common = data.cancer.gene[, match(genes.all.common, colnames(data.cancer.gene))]
 
