@@ -1,14 +1,14 @@
 source('extract.R')
-prepocess.cancer <- function(cancer.name)
+preprocess <- function(name, data, col.index, level.index)
 {
-  if(is.na(match(cancer.name, unique(canc$Tumor))))
+  if(is.na(match(name, unique(data[,col.index]))))
   {
-    print("wrong cancer name")
+    print("wrong name")
     return()
   }
-  canc.type = canc[canc$Tumor == cancer.name, ]
-  canc.type$Level = set.level(renal.cancer$Level, levels(canc.type$Level), 2)
-  return(canc.type)
+  type = data[data[,col.index] == name, ]
+  type$Level = set.level(type[,level.index], levels(type[,level.index]), 2)
+  return(type)
 }
 
 initialize.empty <- function(unique.genes, levels, times.to.repeat, no.unique.genes)
@@ -30,7 +30,7 @@ reduce.levels <- function(canc.name, levels, combine.conc)
   ###levels - levels of conc to keep(character vector)
   ###combine.conc - list concentration levels to be combined in each level(list)
 {
-  canc.type <- prepocess.cancer(canc.name)
+  canc.type <- preprocess(canc.name, canc, 2, 3)
   l = length(levels)
   unique.genes = unique(canc.type$Gene)
   no.unique.genes = length(unique(canc.type$Gene))
@@ -87,6 +87,82 @@ glioma.mod.canc = reduce.levels('glioma', c('Present', 'Not detected'),
 lymphoma.mod.canc = reduce.levels('lymphoma', c('Present', 'Not detected'), 
                                   list('Present', 'Not detected'))
 
+
+lymph.normal = preprocess('lymph node', normal, 2, 4)
+renal.normal = preprocess('kidney', normal, 2, 4)
+glioma.normal = preprocess('glial cells', normal, 3, 4)
+
+
+find.diff.expressed <- function(normal, cancer, level.indexes, genes.indexes)
+{
+  genes = intersect(unique(normal[,genes.indexes[1]]), unique(cancer[,genes.indexes[2]]))
+  diff.expressed = c()
+  for(i in genes)
+  {
+    canc.level = as.character(cancer[match(i, cancer[,genes.indexes[2]]), level.indexes[2]])
+    normal.gene.indexes = which(normal[,genes.indexes[1]] == i)
+    normal.level = normal[,level.indexes[1]][normal.gene.indexes][1]
+    if((sum(normal[,level.indexes[1]][normal.gene.indexes] == normal.level) == length(normal.gene.indexes))
+       && canc.level != normal.level) 
+      diff.expressed = c(diff.expressed, i)
+  }
+  return(diff.expressed)
+}
+bile.diff = find.diff.expressed(bile.duct, mod.canc.liver.2, c(4,5), c(1,1))
+hep.diff = find.diff.expressed(hepatocytes_all, mod.canc.liver.2, c(4,5), c(1,1))
+diff.expressed.4 = mapply(function(x,y)
+  {
+  find.diff.expressed(x,y,c(4,5), c(1,1))
+}, list(lymph.normal, renal.normal, glioma.normal), list(lymphoma.mod.canc, renal.mod.canc, glioma.mod.canc))
+diff.expressed.4[['liver']] = intersect(bile.diff, hep.diff)
+names(diff.expressed.4) = c('lymph', 'renal', 'glioma', 'liver')
+diff.expressed.all = intersect(intersect(diff.expressed.4$lymph, diff.expressed.4$renal), 
+                               intersect(diff.expressed.4$glioma, diff.expressed.4$liver))
+diff.expressed.all.indexes = match(intersect(diff.expressed.all, total.genes), total.genes)
+res.mca.diff.expressed.all = MCA(data.cancer.gene[,diff.expressed.all.indexes])
+fviz_mca_ind(res.mca.diff.expressed.all)
+hcpc.diff.expressed.all = HCPC(res.mca.diff.expressed.all)
+plot(hcpc.diff.expressed.all, choice = 'tree')
+dev.off()
+diff.genes.indexes.tt = c(26,27)
+
+renal.index = match(diff.expressed.4$renal, total.genes)
+res.mca.renal.diff = MCA(data.cancer.gene[,renal.index])
+fviz_mca_ind(res.mca.renal.diff)
+
+liver.index = match(intersect(diff.expressed.4$liver,diff.expressed.4$renal), total.genes)
+res.mca.liver.diff = MCA(data.cancer.gene[,liver.index])
+fviz_mca_ind(res.mca.liver.diff)
+
+glioma.index = match(diff.expressed.4$liver, total.genes)
+res.mca.glioma.diff = MCA(data.cancer.gene[,glioma.index])
+fviz_mca_ind(res.mca.glioma.diff)
+
+lymphoma.index = match(intersect(diff.expressed.4$lymph, total.genes), total.genes)
+res.mca.lymph.diff = MCA(data.cancer.gene[, lymphoma.index])
+fviz_mca_ind(res.mca.lymph.diff)
+genes.only.lymph.index = c() #contains indexes of lymphoma.index which have a particular expression
+#only across lymphoma
+for(i in seq(length(lymphoma.index)))
+{
+  val = as.character(data.cancer.gene[10,lymphoma.index[i]])
+  #print(val)
+  if(sum(data.cancer.gene[c(c(1:9),c(11:20)), lymphoma.index[i]] == val) == 0)
+  {
+   # print('yes')
+    genes.only.lymph.index = c(genes.only.lymph.index, i)
+  }
+}
+#opposite of gene.only.lymph.index but contains lymphoma.index's indexes
+not.only.lymph = setdiff(lymphoma.index, lymphoma.index[genes.only.lymph.index]) 
+res.MCA.not.diff.lymph = MCA(data.cancer.gene[,not.only])
+fviz_mca_ind(res.MCA.not.diff.lymph)
+hc = HCPC(res.MCA.not.diff.lymph)
+plot(hc,choice='tree')
+dev.off()
+res.MCA.diff.lymph = MCA(data.cancer.gene[,lymphoma.index[genes.only.lymph.index]])
+fviz_mca_ind(res.MCA.diff.lymph)
+
 all.cancers <- cancer.all.gene.wise[,c("Gene","Giloma.Cancer",'Liver.Cancer', 'Lymphoma.Cancer', 'Renal.Cancer')]
 data.all.cancers <- t(all.cancers)
 colnames(data.all.cancers) <- all.cancers$Gene
@@ -111,6 +187,7 @@ liver.match = find.sim(all.cancers, 1, 3, c(2,4,5))
 giloma.match = find.sim(all.cancers, 1, 2, c(3,4,5))
 lymp.match = find.sim(all.cancers, 1, 4, c(2,3,5))
 renal.match = find.sim(all.cancers, 1, 5, c(2,3,4))
+
 
 bp.data.frame = list()
 for(i in seq(length(data.frame.mca)))
@@ -286,6 +363,35 @@ data.frame.mca.cell.cycle = data.cancer.gene[,
 res.mca.cell.cycle = MCA(data.frame.mca.cell.cycle)
 fviz_mca_ind(res.mca.cell.cycle)
 hcpc.cell.cycle = HCPC(res.mca.cell.cycle)
+plot(hcpc.cell.cycle, choice = 'tree')
 
-data.frame.all.common = data.cancer.gene[, match(genes.all.common, colnames(data.cancer.gene))]
+indexes.cell.cycle = match(intersect(cell.cycle.ens,colnames(data.cancer.gene)), colnames(data.cancer.gene))
+indexes.all.cycle = sort(union(indexes.match.same, indexes.cell.cycle))
+res.mca.all.cycle = MCA(data.cancer.gene[, indexes.all.cycle[c(1:258,c(260:409),c(411:506),c(508:639), 
+                        c(641:667), c(669:683),c(684:696), c(698:4213), c(4215:4251), 
+                        c(4253,5834))]], graph = F)
+fviz_mca_ind(res.mca.all.cycle)
+hcpc.all.cycle = HCPC(res.mca.all.cycle, graph = F)
+plot(hcpc.all.cycle, choice = 'tree')
+dev.off()
+gene.sep = c(259,410,507,640, 667, 697, 4214, 4252)#684 separates but not that much
 
+total.genes = colnames(data.cancer.gene)
+
+c1metabolism.genes = read.delim('c1metabolism.txt', header = F)
+c1metabolism.genes =  as.character(c1metabolism.genes$V1)
+c1metabolism.genes.indexes = match(intersect(c1metabolism.genes, total.genes), total.genes)
+res.mca.c1metabolism = MCA(data.cancer.gene[,c1metabolism.genes.indexes])
+fviz_mca_ind(res.mca.c1metabolism)
+
+tca.genes = read.delim('TCA.txt', header = F)
+tca.genes = as.character(tca.genes$V1)
+tca.genes.indexes = match(intersect(tca.genes, total.genes), total.genes)
+res.mca.tca = MCA(data.cancer.gene[,tca.genes.indexes])
+fviz_mca_ind(res.mca.tca)
+
+fattyacidelongation.genes = c('ENSG00000118402', 	'ENSG00000119915', 'ENSG00000164181',
+                              'ENSG00000066322','ENSG00000170522')
+fattyacidelongation.genes.indexes = match(intersect(fattyacidelongation.genes, total.genes), total.genes)
+res.mca.fattyacidelongation = MCA(data.cancer.gene[,fattyacidelongation.genes.indexes])
+fviz_mca_ind(res.mca.fattyacidelongation)
