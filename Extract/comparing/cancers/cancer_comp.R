@@ -1,15 +1,3 @@
-source('extract.R')
-preprocess <- function(name, data, col.index, level.index)
-{
-  if(is.na(match(name, unique(data[,col.index]))))
-  {
-    print("wrong name")
-    return()
-  }
-  type = data[data[,col.index] == name, ]
-  type$Level = set.level(type[,level.index], levels(type[,level.index]), 2)
-  return(type)
-}
 
 initialize.empty <- function(unique.genes, levels, times.to.repeat, no.unique.genes)
   ###Initializes the data frame creating an empty data frame specific for cancer as well 
@@ -24,62 +12,7 @@ initialize.empty <- function(unique.genes, levels, times.to.repeat, no.unique.ge
   return(canc.specific)
 }
 
-reduce.levels <- function(canc.name, levels, combine.conc)
-  ###Reudces the 4 levels of cancer to 2 levels
-  ###canc.name- name cancer
-  ###levels - levels of conc to keep(character vector)
-  ###combine.conc - list concentration levels to be combined in each level(list)
-{
-  canc.type <- preprocess(canc.name, canc, 2, 3)
-  l = length(levels)
-  unique.genes = unique(canc.type$Gene)
-  no.unique.genes = length(unique(canc.type$Gene))
-  canc.specific = initialize.empty(unique.genes, levels, l, no.unique.genes)
-  if(length(levels) != length(combine.conc))
-  {
-    print("Check Params")
-    return()
-  }
-  
-  indexes.levels = list() ##contains the indexes of the various levels
-  for(i in seq(length(combine.conc)))
-  {
-    indexes.levels[[i]] = list()
-    for(j in seq(length(combine.conc[[i]])))
-        indexes.levels[[i]][[j]] = which(canc.type$Level == combine.conc[[i]][j])
-  }
-  k = 1
-  for(gene in unique.genes)
-  {
-    gene.index = which(gene == canc.type$Gene) #gene index of the gene in the cancer set to be reduced
-    gene.and.level.index = c()
-    for(i in seq(l))
-    {
-      for(j in seq(length(indexes.levels[[i]])))
-      {
-        gene.and.level.index = c(gene.and.level.index,
-                                 gene.index[!is.na(match(gene.index, indexes.levels[[i]][[j]]))])
-      }
-      canc.specific$Gene[k + i - 1] = gene
-      canc.specific$Count[k + i - 1] = sum(canc.type$Count[gene.and.level.index])
-      gene.and.level.index = c()
-    }
-    canc.specific$Total[k] = canc.specific$Total[k + 1] = 
-      canc.specific$Count[k] + canc.specific$Count[k+1]
-    
-    levels.vals = sapply(c(0.5, 0.75, 0.9, 1), function(x)
-    {
-      calculate.level(x,canc.specific$Count[k], canc.specific$Count[k+1], levels)
-    })
-    canc.specific$actual.level.50[c(k, k + 1)] <- levels.vals[1]
-    canc.specific$actual.level.75[c(k, k + 1)] <- levels.vals[2]
-    canc.specific$actual.level.90[c(k, k + 1)] <- levels.vals[3]
-    canc.specific$actual.level.100[c(k, k + 1)] <- levels.vals[4]
-    k = k + l
-      
-  }
-  return(canc.specific)
-}
+
 renal.mod.canc = reduce.levels('renal cancer', c('Present', 'Not detected'),
                                list('Present', 'Not detected'))
 glioma.mod.canc = reduce.levels('glioma', c('Present', 'Not detected'),
@@ -91,23 +24,9 @@ lymphoma.mod.canc = reduce.levels('lymphoma', c('Present', 'Not detected'),
 lymph.normal = preprocess('lymph node', normal, 2, 4)
 renal.normal = preprocess('kidney', normal, 2, 4)
 glioma.normal = preprocess('glial cells', normal, 3, 4)
+breast.normal = preprocess(c('breast'), normal, 2, 4)
 
 
-find.diff.expressed <- function(normal, cancer, level.indexes, genes.indexes)
-{
-  genes = intersect(unique(normal[,genes.indexes[1]]), unique(cancer[,genes.indexes[2]]))
-  diff.expressed = c()
-  for(i in genes)
-  {
-    canc.level = as.character(cancer[match(i, cancer[,genes.indexes[2]]), level.indexes[2]])
-    normal.gene.indexes = which(normal[,genes.indexes[1]] == i)
-    normal.level = normal[,level.indexes[1]][normal.gene.indexes][1]
-    if((sum(normal[,level.indexes[1]][normal.gene.indexes] == normal.level) == length(normal.gene.indexes))
-       && canc.level != normal.level) 
-      diff.expressed = c(diff.expressed, i)
-  }
-  return(diff.expressed)
-}
 bile.diff = find.diff.expressed(bile.duct, mod.canc.liver.2, c(4,5), c(1,1))
 hep.diff = find.diff.expressed(hepatocytes_all, mod.canc.liver.2, c(4,5), c(1,1))
 diff.expressed.4 = mapply(function(x,y)
