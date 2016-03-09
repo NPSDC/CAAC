@@ -217,7 +217,7 @@ add.vals <- function(data,gene.index, tissue.index, level.index)
     return(canc.add)
 }
 
-add.1.present <- function(tumor.data, count.index, total.index)
+add.1.present <- function(data,tumor.col, tumor.index, tumor.data, only1.index, types, gene.indexes)
 {
   #This function adds the column only.present.1 column from canc to exisiting tissue specific cancer dataframe
   #tumor.col contains the tumor column in data
@@ -225,18 +225,13 @@ add.1.present <- function(tumor.data, count.index, total.index)
   #tumor.data exisitng tumor data frame corresponding to tumor.data
   #only1.index contains the index corresponding to column index in data
   #types contains the cancer types
-  #gene.index contains gene indexes tumor.data
-  #g.indexes indexes of data to be considered
-  actual_val = c()
-  for(i in seq(1, length(tumor.data[,1]), 2))
-  {
-    if(tumor.data[i+1,count.index] == tumor.data[i+1,total.index])
-      actual_val = c(actual_val, 'Not detected', 'Not detected')
-    else
-      actual_val = c(actual_val, 'Present', 'Present')
-  }
-  tumor.data$only.present1 = actual_val
-  #View(tumor.data)
+  #genes.indexes contains gene indexes of both data and tumor.data
+  tumor.indexes = which(data[,tumor.col] == types[tumor.index])
+  gene.indexes = match(unique(tumor.data[,gene.indexes[2]]), data[,gene.indexes[1]])
+  indexes = intersect(tumor.indexes, gene.indexes)
+  print(length(indexes))
+  indexes = rep(indexes, each = 2)
+  tumor.data$only1.present = data[indexes,only1.index]
   return(tumor.data)
 }
 
@@ -256,55 +251,4 @@ write.lists <- function(lists, type)
     for(i in seq(l))
       write(lists[[i]],paste(names(lists)[i],'.txt'))
   }
-}
-
-find.lengths <- function(lists)
-{
-  return(sapply(lists, length))
-}
-create.data.frame <- function(names, all, down, up)
-{
-  #name <- names of cancers
-  #rest differentially expressed genes
-  all.lengths <- find.lengths(all)
-  down.lengths <- find.lengths(down)
-  up.lengths <- find.lengths(up)
-  print(names)
-  diff.df <- data.frame(cancer = names, all.reg = all.lengths, down.reg = down.lengths, up.reg = up.lengths)
-  return(diff.df)
-}
-
-find.unique <- function(diff.exp.tissue, diff.exp.all, tissue.index)
-{
-  #finds the genes which show differential expression for only that cancer
-  common = c()
-  for(i in seq(length(diff.exp.all)))
-  {
-    if(i != tissue.index)
-      common = union(common, intersect(diff.exp.tissue, diff.exp.all[[i]]))
-  }
-  only = setdiff(diff.exp.tissue, common)
-  return(only)
-}
-
-find.unique.cancer <- function(data, tumor.index, diff.expressed.tumor.genes)
-{
-  total.genes = unique(colnames(data))
-  diff.indexes = match(intersect(total.genes, diff.expressed.tumor.genes), total.genes)
-    unique.indexes = c()
-  for(i in seq(length(diff.indexes)))
-  {
-    val = as.character(data[tumor.index, diff.indexes[i]])
-    if(sum(data.cancer.gene[setdiff(seq(20), tumor.index), diff.indexes[i]] == val) == 0)
-      unique.indexes = c(unique.indexes, i)
-  }
-  return(diff.indexes[unique.indexes])
-}
-
-ggplot.needs <- function(df, x, y, color)
-{
-  ggplot(data = df, aes_string(x,y))  +
-    geom_bar(stat = 'identity',position  ="dodge", width=0.5, fill = color) +
-    geom_text(aes_string(label = y), vjust = -0.3) +  theme_minimal() 
-  
 }

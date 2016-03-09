@@ -39,3 +39,40 @@ diff.expressed.up.all.canc = mapply( function(x,y)
 names(diff.expressed.up.all.canc) = tissues.names
 
 diff.expressed.down.all.canc = find.down.regulated(diff.expressed.all.canc, diff.expressed.up.all.canc, tissues.names)
+
+###writing files
+write.lists(tissues.normal, 1)
+write.lists(tissues.canc, 1)
+write.lists(diff.expressed.down.all.canc, 2)
+write.lists(diff.expressed.up.all.canc, 2)
+
+###uniquely differentiated
+uniquely.diff <- mapply(function(x,y)
+  {
+  find.unique(x, diff.expressed.all.canc, y)
+}, diff.expressed.all.canc, seq(1,17))
+names(uniquely.diff) = tissues.names
+lengths.uniquely.diff <- sapply(uniquely.diff, length)
+
+###uniquely expressed in cancer
+uniquely.exp.canc <- mapply(function(x,y)
+{
+  find.unique.cancer(data.cancer.gene, x, y)
+}, tumor.indexes, diff.expressed.all.canc)
+names(uniquely.exp.canc) = tissues.names
+lengths.uniquely.exp.canc <- sapply(uniquely.exp.canc, length)
+
+library(ggplot2)
+short.names = sapply(tissues.names, function(x)
+  strsplit(x, '\\.')[[1]][1])
+short.names = sapply(short.names, function(x)
+  substr(x,1,3))
+diff.df.50 = create.data.frame(short.names, diff.expressed.all.canc, diff.expressed.down.all.canc, diff.expressed.up.all.canc)
+diff.df.50$uniquely_diff = lengths.uniquely.diff
+diff.df.50$uniquely_exp = lengths.uniquely.exp.canc
+
+ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[2] , 'blue')
+ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[3] , 'red')
+ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[4] , 'green')
+ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[5] , 'pink')
+ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[6] , 'orange')
