@@ -290,12 +290,14 @@ find.unique <- function(diff.exp.tissue, diff.exp.all, tissue.index)
 find.unique.cancer <- function(data, tumor.index, diff.expressed.tumor.genes)
 {
   total.genes = unique(colnames(data))
+  
   diff.indexes = match(intersect(total.genes, diff.expressed.tumor.genes), total.genes)
-    unique.indexes = c()
+  #print(length(diff.indexes))
+  unique.indexes = c()
   for(i in seq(length(diff.indexes)))
   {
     val = as.character(data[tumor.index, diff.indexes[i]])
-    if(sum(data.cancer.gene[setdiff(seq(20), tumor.index), diff.indexes[i]] == val) == 0)
+    if(sum(data[setdiff(seq(20), tumor.index), diff.indexes[i]] == val) == 0)
       unique.indexes = c(unique.indexes, i)
   }
   return(diff.indexes[unique.indexes])
@@ -307,4 +309,65 @@ ggplot.needs <- function(df, x, y, color)
     geom_bar(stat = 'identity',position  ="dodge", width=0.5, fill = color) +
     geom_text(aes_string(label = y), vjust = -0.3) +  theme_minimal() 
   
+}
+
+recorrect.cancer <- function(tissue.canc, tissue.normal, count.col, total.col, level.indexes)
+{
+    ##Corrects the cancer for both 50% and only 1 by looking at the normal data
+    ##For both I determine the level of normal and then try to set opposite in cancer enabling max diff
+    ##level.indexes contains indexes for level of 50%(1) and 1(3) in cancer and (2) for normal
+    #print(j)
+    half.indexes = which(tissue.canc[,count.col] == tissue.canc[,total.col]/2)
+    unique.half.genes = unique(tissue.canc$Gene[half.indexes])
+    unique.genes = unique(tissue.canc$Gene)
+    #print(half.indexes)
+    for(i in unique.half.genes)
+    {
+      #print(k)
+      indexes.normal = which(tissue.normal$Gene == i) 
+      indexes.canc = which(tissue.canc$Gene == i)
+      l.present.indexes = sum(which(tissue.normal[indexes.normal,level.indexes[2]] == 'Present'))
+      l.absent.indexes = sum(which(tissue.normal[indexes.normal,level.indexes[2]] == 'Not detected'))
+      #print(l.present.indexes)
+      #print(l.absent.indexes)
+      if(l.present.indexes > l.absent.indexes)
+      {
+        #print('yes')
+        tissue.canc[indexes.canc,level.indexes[1]] = 'Not detected'  
+      }
+    }
+    for(i in unique.genes)
+    {
+      indexes.normal = which(tissue.normal$Gene == i) 
+      indexes.canc = which(tissue.canc$Gene == i)
+      l.present.indexes = sum(which(tissue.normal[indexes.normal,level.indexes[2]] == 'Present'))
+      l.absent.indexes = sum(which(tissue.normal[indexes.normal,level.indexes[2]] == 'Not detected'))
+      level = 'Present'
+      if(l.absent.indexes > l.present.indexes)
+      {
+        #print('yes')
+        level = 'Not detected'
+      }
+      #print(level)
+      if(level == 'Not detected' & tissue.canc[indexes.canc[1], count.col] > 0 )
+        tissue.canc[indexes.canc, level.indexes[3]] = 'Present'
+      if(level == 'Present' & tissue.canc[indexes.canc[2], count.col] > 0 )
+        tissue.canc[indexes.canc, level.indexes[3]] = 'Not detected'
+    }
+  return(tissue.canc)
+}
+
+recorrect.all <- function(tissues.canc, all.canc, col.tissue, col.all)
+{
+  for(i in seq(length(col.all)))
+  {
+    tissue.genes = unique(tissues.canc[[i]]$Gene)
+    indexes = match(tissue.genes, all.canc$Gene)
+    level.indexes = seq(1,2*length(tissue.genes), 2)
+    #print(level.indexes)
+    #print(indexes)
+    #print(length(tissues.canc[level.indexes, col.tissue]))
+    all.canc[indexes,col.all[i]] = tissues.canc[[i]][level.indexes, col.tissue]
+  }
+  return(all.canc)
 }

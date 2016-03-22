@@ -45,6 +45,8 @@ write.lists(tissues.normal, 1)
 write.lists(tissues.canc, 1)
 write.lists(diff.expressed.down.all.canc, 2)
 write.lists(diff.expressed.up.all.canc, 2)
+write.lists(uniquely.diff, 2)
+write.lists(uniquely.exp.canc, 2)
 
 ###uniquely differentiated
 uniquely.diff <- mapply(function(x,y)
@@ -76,3 +78,84 @@ ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[3] , 'red
 ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[4] , 'green')
 ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[5] , 'pink')
 ggplot.needs(diff.df.50, colnames(diff.df.50)[1], colnames(diff.df.50)[6] , 'orange')
+
+
+
+#####Corrected################3
+tissues.canc.corr = list() 
+for(i in seq(length(tissues.canc.corr)))
+{
+  tissues.canc.corr[[i]] = recorrect.cancer(tissues.canc.corr[[i]], tissues.normal[[i]], 3, 4, c(5, 4, 9))
+}
+names(tissues.canc.corr) <- tissues.names
+
+###correcting cancer.all.gene.wise
+cancer.all.gene.wise.corr = cancer.all.gene.wise
+cancer.all.gene.wise.corr = recorrect.all(tissues.canc.corr, cancer.all.gene.wise.corr, 5, tumor.indexes+1)
+
+diff.expressed.all.canc.corr = mapply(function(x,y)
+{
+  find.diff.expressed(x,y,c(4,5),c(1,1))
+}, tissues.normal, tissues.canc.corr)
+names(diff.expressed.all.canc.corr) = tissues.names
+
+diff.expressed.up.all.canc.corr = mapply( function(x,y)
+{
+  find.up.regulated(x,5,1,y)
+},diff.expressed.all.canc.corr,tissues.canc.corr)
+names(diff.expressed.up.all.canc.corr) = tissues.names
+
+diff.expressed.down.all.canc.corr = find.down.regulated(diff.expressed.all.canc.corr, diff.expressed.up.all.canc.corr, tissues.names)
+
+###writing files
+write.lists(tissues.canc.corr, 1)
+write.lists(diff.expressed.down.all.canc.corr, 2)
+write.lists(diff.expressed.up.all.canc.corr, 2)
+write.lists(uniquely.diff.corr, 2)
+write.lists(uniquely.exp.canc.corr, 2)
+
+###uniquely differentiated
+uniquely.diff.corr <- mapply(function(x,y)
+{
+  find.unique(x, diff.expressed.all.canc.corr, y)
+}, diff.expressed.all.canc.corr, seq(1,17))
+names(uniquely.diff.corr) = tissues.names
+lengths.uniquely.diff.corr <- sapply(uniquely.diff.corr, length)
+names(lengths.uniquely.diff.corr) <- tissues.names
+
+###uniquely expressed in cancer
+data.cancer.corr = t(cancer.all.gene.wise.corr)
+data.cancer.corr = data.frame(data.cancer.corr)
+colnames(data.cancer.corr) = data.cancer.corr[1,]
+data.cancer.corr = data.cancer.corr[-1,]
+
+uniquely.exp.canc.corr <- mapply(function(x,y)
+{
+  find.unique.cancer(data.cancer.gene, x, y)
+}, tumor.indexes, diff.expressed.all.canc.corr)
+names(uniquely.exp.canc.corr) = tissues.names
+lengths.uniquely.exp.canc.corr <- sapply(uniquely.exp.canc.corr, length)
+names(lengths.uniquely.exp.canc.corr) = tissues.names
+
+
+###MCA ANALYSIS##################
+library(FactoMineR)
+library(factoextra)
+res.mca.corr = MCA(data.cancer.corr)
+fviz_mca_ind(res.mca.corr)
+
+###Plotting graphs###
+library(ggplot2)
+short.names = sapply(tissues.names, function(x)
+  strsplit(x, '\\.')[[1]][1])
+short.names = sapply(short.names, function(x)
+  substr(x,1,3))
+diff.df.50.corr = create.data.frame(short.names, diff.expressed.all.canc.corr, diff.expressed.down.all.canc.corr, diff.expressed.up.all.canc.corr)
+diff.df.50.corr$uniquely_diff = lengths.uniquely.diff.corr
+diff.df.50.corr$uniquely_exp = lengths.uniquely.exp.canc.corr
+
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[2] , 'blue')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[3] , 'red')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[4] , 'green')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[5] , 'pink')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[6] , 'orange')
