@@ -112,7 +112,7 @@ write.lists(tissues.canc.corr, 1)
 write.lists(diff.expressed.down.all.canc.corr, 2)
 write.lists(diff.expressed.up.all.canc.corr, 2)
 write.lists(uniquely.diff.corr, 2)
-write.lists(uniquely.exp.canc.corr, 2)
+write.lists(uniquely.exp.canc.corr, 3)
 
 ###uniquely differentiated
 uniquely.diff.corr <- mapply(function(x,y)
@@ -125,19 +125,49 @@ names(lengths.uniquely.diff.corr) <- tissues.names
 
 ###uniquely expressed in cancer
 data.cancer.corr = t(cancer.all.gene.wise.corr)
-data.cancer.corr = data.frame(data.cancer.corr)
+#data.cancer.corr = data.frame(data.cancer.corr)
 colnames(data.cancer.corr) = data.cancer.corr[1,]
 data.cancer.corr = data.cancer.corr[-1,]
 
 uniquely.exp.canc.corr <- mapply(function(x,y)
 {
-  find.unique.cancer(data.cancer.gene, x, y)
+  find.unique.cancer(data.cancer.corr, x, y)
 }, tumor.indexes, diff.expressed.all.canc.corr)
 names(uniquely.exp.canc.corr) = tissues.names
 lengths.uniquely.exp.canc.corr <- sapply(uniquely.exp.canc.corr, length)
 names(lengths.uniquely.exp.canc.corr) = tissues.names
 
+uniquely.exp.canc.corr.all <- sapply(tumor.indexes,function(x)
+{
+  find.unique.cancer(data.cancer.corr, x, total.genes )
+})
+names(uniquely.exp.canc.corr.all) = tissues.names
+lengths.uniquely.exp.canc.corr.all <- sapply(uniquely.exp.canc.corr.all, length)
+names(uniquely.exp.canc.corr.all) = tissues.names
 
+uniquely.exp.canc.corr.up = mapply(function(x,y){
+  intersect(total.genes[x],y) 
+}, uniquely.exp.canc.corr, diff.expressed.up.all.canc.corr)
+lengths.uniquely.exp.canc.corr.up <- sapply(uniquely.exp.canc.corr.up, length)
+names(lengths.uniquely.exp.canc.corr.up) = tissues.names
+
+uniquely.exp.canc.corr.down = mapply(function(x,y){
+  intersect(total.genes[x],y) 
+}, uniquely.exp.canc.corr, diff.expressed.down.all.canc.corr)
+lengths.uniquely.exp.canc.corr.down <- sapply(uniquely.exp.canc.corr.down, length)
+names(lengths.uniquely.exp.canc.corr.down) = tissues.names
+
+uniquely.diff.corr.down = mapply(function(x,y){
+  intersect(x,y) 
+}, uniquely.diff.corr, diff.expressed.down.all.canc.corr)
+lengths.uniquely.diff.corr.down <- sapply(uniquely.diff.corr.down, length)
+names(lengths.uniquely.diff.corr.down) = tissues.names
+
+uniquely.diff.corr.up = mapply(function(x,y){
+  intersect(x,y) 
+}, uniquely.diff.corr, diff.expressed.up.all.canc.corr)
+lengths.uniquely.diff.corr.up <- sapply(uniquely.diff.corr.up, length)
+names(lengths.uniquely.diff.corr.up) = tissues.names
 ###MCA ANALYSIS##################
 library(FactoMineR)
 library(factoextra)
@@ -153,9 +183,19 @@ short.names = sapply(short.names, function(x)
 diff.df.50.corr = create.data.frame(short.names, diff.expressed.all.canc.corr, diff.expressed.down.all.canc.corr, diff.expressed.up.all.canc.corr)
 diff.df.50.corr$uniquely_diff = lengths.uniquely.diff.corr
 diff.df.50.corr$uniquely_exp = lengths.uniquely.exp.canc.corr
+diff.df.50.corr$uniquely_exp.all = lengths.uniquely.exp.canc.corr.all
+diff.df.50.corr$uniquely_exp_down = lengths.uniquely.exp.canc.corr.down
+diff.df.50.corr$uniquely_exp_up = lengths.uniquely.exp.canc.corr.up
+diff.df.50.corr$uniquely_diff_down = lengths.uniquely.diff.corr.down
+diff.df.50.corr$uniquely_diff_up = lengths.uniquely.diff.corr.up
 
 ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[2] , 'blue')
 ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[3] , 'red')
 ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[4] , 'green')
 ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[5] , 'pink')
 ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[6] , 'orange')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[7] , 'yellow')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[8] , 'red')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[9] , 'green')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[10] , 'red')
+ggplot.needs(diff.df.50.corr, colnames(diff.df.50.corr)[1], colnames(diff.df.50.corr)[11] , 'green')

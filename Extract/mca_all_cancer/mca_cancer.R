@@ -332,7 +332,7 @@ get.data.set.mca <-function(bp.genes.ensembl.all, bp.genes.ensembl.absent, data.
   names(data.frame.mca) = names(bp.genes.ensembl.all)
   return(data.frame.mca)
 }
-data.frame.mca <- get.data.set.mca(bp.genes.ensembl, genes.absent.ensembl, data.cancer.gene)
+data.frame.mca <- get.data.set.mca(bp.genes.ensembl, genes.absent.ensembl, data.cancer.corr)
 
 res.mca.bp <- lapply(data.frame.mca, MCA)
 names(res.mca.bp) <- names(data.frame.mca)

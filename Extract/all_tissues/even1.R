@@ -112,7 +112,7 @@ diff.expressed.down.all.canc.present1.corr = find.down.regulated(diff.expressed.
 write.lists(diff.expressed.down.all.canc.present1.corr, 2)
 write.lists(diff.expressed.up.all.canc.present1.corr, 2)
 write.lists(uniquely.diff.present1.corr, 2)
-write.lists(uniquely.exp.canc.present1.corr, 2)
+write.lists(uniquely.exp.canc.present1.corr, 3)
 
 ###uniquely differentiated
 uniquely.diff.present1.corr <- mapply(function(x,y)
@@ -136,13 +136,14 @@ uniquely.exp.canc.present1.corr <- mapply(function(x,y)
 names(uniquely.exp.canc.present1.corr) = tissues.names
 lengths.uniquely.exp.canc.present1.corr <- sapply(uniquely.exp.canc.present1.corr, length)
 names(lengths.uniquely.exp.canc.present1.corr) = tissues.names
-unique.exp.present1.corr <- sapply(tumor.indexes, function(x)
-{
-  find.unique.cancer(data.present.1, x, total.genes )
-})
-names(unique.exp.present1.corr) = tissues.names
-lengths.unqiue.exp.present1.corr = sapply(unique.exp.corr, length)
 
+uniquely.exp.present1.corr.all <- sapply(tumor.indexes, function(x)
+{
+  find.unique.cancer(data.present.1.corr, x, total.genes )
+})
+names(uniquely.exp.present1.corr.all) = tissues.names
+lengths.uniquely.exp.present1.corr.all = sapply(unique.exp.corr, length)
+names(lengths.uniquely.exp.present1.corr.all) = tissues.names
 ###MCA ANALYSIS##################
 library(FactoMineR)
 library(factoextra)
@@ -160,9 +161,10 @@ short.names = sapply(short.names, function(x)
 diff.df.1.corr = create.data.frame(short.names, diff.expressed.all.canc.present1.corr, diff.expressed.down.all.canc.present1.corr, diff.expressed.up.all.canc.present1.corr)
 diff.df.1.corr$uniquely_diff = lengths.uniquely.diff.present1.corr
 diff.df.1.corr$uniquely_exp = lengths.uniquely.exp.canc.present1.corr
-
+diff.df.1.corr$uniquely_exp.all = lengths.uniquely.exp.present1.corr.all
 ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[2] , 'blue')
 ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[3] , 'red')
 ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[4] , 'green')
 ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[5] , 'pink')
 ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[6] , 'orange')
+ggplot.needs(diff.df.1.corr, colnames(diff.df.1.corr)[1], colnames(diff.df.1.corr)[7] , 'yellow')

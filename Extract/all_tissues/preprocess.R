@@ -256,6 +256,11 @@ write.lists <- function(lists, type)
     for(i in seq(l))
       write(lists[[i]],paste(names(lists)[i],'.txt'))
   }
+  if(type == 3)#text
+  {
+    for(i in seq(l))
+      write(total.genes[lists[[i]]],paste(names(lists)[i],'.txt'))
+  }
 }
 
 find.lengths <- function(lists)
