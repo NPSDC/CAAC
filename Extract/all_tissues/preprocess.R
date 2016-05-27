@@ -265,7 +265,10 @@ write.lists <- function(lists, type)
 
 find.lengths <- function(lists)
 {
-  return(sapply(lists, length))
+  lengths <- lapply(lists, length)
+  names(lengths) <- names(lists)
+  #print(names(lengths))
+  return(lengths)
 }
 create.data.frame <- function(names, all, down, up)
 {
@@ -375,4 +378,14 @@ recorrect.all <- function(tissues.canc, all.canc, col.tissue, col.all)
     all.canc[indexes,col.all[i]] = tissues.canc[[i]][level.indexes, col.tissue]
   }
   return(all.canc)
+}
+
+create.df.length <- function(lengths.list, l.bps, l.tumors, short.names)
+{
+  lengths.df <- data.frame(setNames(replicate(l.bps+1, seq(l.tumors), simplify = F),
+                                    c('name', names(lengths.list))))
+  for(i in seq(l.bps))
+    lengths.df[,i+1] = unlist(lengths.list[[i]])
+  lengths.df$name = short.names
+  return(lengths.df)
 }
