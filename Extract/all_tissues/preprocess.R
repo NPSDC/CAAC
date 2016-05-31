@@ -389,3 +389,111 @@ create.df.length <- function(lengths.list, l.bps, l.tumors, short.names)
   lengths.df$name = short.names
   return(lengths.df)
 }
+
+find.bp.deg.int <- function(degs.list, bps.list)
+{
+  req.list = list()
+  for(i in seq(bps.list))
+  {
+    req.list[[i]] = sapply(degs.list, function(x)
+    {
+      intersect(bps.list[[i]], x)
+    })
+    names(req.list[[i]]) = names(degs.list)
+  }
+  names(req.list) = names(bp.genes.ensembl)
+  return(req.list)
+}
+
+map.genes.ids <- function(ens.genes, genes.ids)
+  return(as.character(genes.ids$Associated.Gene.Name[match(intersect(ens.genes,tot.mapped), tot.mapped)]))
+
+map.genes.lists <- function(degs.list, genes.ids)
+{
+  mapped = lapply(degs.list, function(x)
+    {
+      map.genes.ids(x, genes.ids)
+  })
+  names(mapped) = names(degs.list)
+  return(mapped)
+}
+  
+map.genes.bps.lists <- function(degs.bps.int, genes.ids)
+{
+  mapped = list()
+  for(i in seq(l.bps))
+  {
+    mapped[[i]] = lapply(degs.bps.int[[i]], function(x)
+    {
+      map.genes.ids(x, genes.ids )
+    })
+    names(mapped[[i]]) = tissues.names
+  }
+  names(mapped) = names(degs.bps.int)
+  return(mapped)
+}
+
+test <- function(list1, list2)
+{
+  for(i in seq(length(list1)))
+  {
+    if(sum(list1[[i]] == list2[[i]]) != length(list1[[i]]))
+      print('not match')
+    else
+      print('success')
+  }
+}
+check.for.pattern <- function(pat, canc.list)
+{
+  patts = list()
+  for(i in seq(length(canc.list)))
+  {
+    patts[[names(canc.list)[i]]]= c()
+    for(j in canc.list[[i]])
+    {
+      resp = grep(pat, j, ignore.case = T)
+      if(length(resp) == 1 && resp == 1)
+        patts[[names(canc.list)[i]]] = c(patts[[names(canc.list)[i]]], j)
+    }
+  }
+  return(patts)
+}
+
+write.lists.2nd <- function(lists)
+{
+  for(i in seq(length(lists)))
+  {
+    dir.create(names(lists)[[i]])
+    setwd(names(lists)[[i]])
+    write.lists(lists[[i]], 2)
+    setwd('..')
+  }
+}
+
+find.unique.degs.bps <- function(degs.list)
+{
+  unique.list = list()
+  for(i in seq(length(degs.list)))
+  {
+    unique.list[[i]] = lapply(seq(l.tumors), function(x)
+    {
+      Reduce(setdiff, c(degs.list[[i]][x], 
+                        degs.list[[i]][-x]))
+    })
+    names(unique.list[[i]]) = names(degs.list[[i]])
+  }
+  names(unique.list) = names(degs.list)
+  return(unique.list)
+}
+
+find.intersection <- function(degs.bp.list, regulated.list)
+{
+  req.list = list()
+  for(i in seq(length(degs.bp.list)))
+  {
+    req.list[[i]] = mapply(intersect, degs.bp.list[[i]], regulated.list)
+    names(req.list[[i]]) = names(regulated.list)
+  }
+  names(req.list) = names(degs.bp.list)
+  return(req.list)
+}
