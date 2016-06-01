@@ -382,6 +382,11 @@ recorrect.all <- function(tissues.canc, all.canc, col.tissue, col.all)
 
 create.df.length <- function(lengths.list, l.bps, l.tumors, short.names)
 {
+  #This function creates a data frame for a 2 level list
+  #lenghts.list - the 2 level list
+  #l.bps - the number of bps or the columns here - 1
+  #l.tumor -  the number of tumors or the rows here
+  #short.names - names we want to keep corresponding to the 1st column
   lengths.df <- data.frame(setNames(replicate(l.bps+1, seq(l.tumors), simplify = F),
                                     c('name', names(lengths.list))))
   for(i in seq(l.bps))
@@ -392,6 +397,10 @@ create.df.length <- function(lengths.list, l.bps, l.tumors, short.names)
 
 find.bp.deg.int <- function(degs.list, bps.list)
 {
+  #finds the intersection of a given deg list with the bps list and returns the degs corresponding
+  # to each cancer belonging to a bp
+  #degs.list - contains the degs for each cancer
+  #bps.list -  contains the genes in each BP
   req.list = list()
   for(i in seq(bps.list))
   {
@@ -406,45 +415,55 @@ find.bp.deg.int <- function(degs.list, bps.list)
 }
 
 map.genes.ids <- function(ens.genes, genes.ids)
+  ###maps the ensembl gene ids to gene names
+  #ens.genes - the ensemble gene list
+  #genes.ids - the ids list which will be used for converting
   return(as.character(genes.ids$Associated.Gene.Name[match(intersect(ens.genes,tot.mapped), tot.mapped)]))
 
 map.genes.lists <- function(degs.list, genes.ids)
 {
+  #converts the ensembl ids of genes in a list or list of lists to gene names
+  #degs.list  - the list containing bps and their cancers
+  #genes.ids - the ids list which will be used for converting
+  if(class(degs.list) != 'list')
+    return(map.genes.ids(degs.list, genes.ids))
   mapped = lapply(degs.list, function(x)
     {
-      map.genes.ids(x, genes.ids)
+      map.genes.lists(x, genes.ids)
   })
   names(mapped) = names(degs.list)
-  return(mapped)
-}
-  
-map.genes.bps.lists <- function(degs.bps.int, genes.ids)
-{
-  mapped = list()
-  for(i in seq(l.bps))
-  {
-    mapped[[i]] = lapply(degs.bps.int[[i]], function(x)
-    {
-      map.genes.ids(x, genes.ids )
-    })
-    names(mapped[[i]]) = tissues.names
-  }
-  names(mapped) = names(degs.bps.int)
   return(mapped)
 }
 
 test <- function(list1, list2)
 {
-  for(i in seq(length(list1)))
+  #tests 2 lists of same length and matches whether they are exacly same or
+  #list1,list2 are the lists 
+  #count = length(list1)
+  if(class(list1) == class(list2) && class(list1) == 'list')
   {
-    if(sum(list1[[i]] == list2[[i]]) != length(list1[[i]]))
-      print('not match')
-    else
-      print('success')
+    for(i in seq(length(list1)))
+    {
+      #print('i and')
+      if(test(list1[[i]], list2[[i]]) == -1)
+        return(-1)
+    }
+    return(1)
   }
+  else
+  {
+    if(length(list1) != length(list2) || sum(sort(list1) == sort(list2)) != length(list1))
+      return(-1)
+    return(1)
+  }
+  #if(count == 7)
+  #print('success')
 }
 check.for.pattern <- function(pat, canc.list)
 {
+  #checks for a gene name the given list of cancer genes
+  #pat -  gene names to be searched in the cancer list
+  #canc.list - list or collection of lists in which a given pattern has to be searched
   patts = list()
   for(i in seq(length(canc.list)))
   {
@@ -459,19 +478,24 @@ check.for.pattern <- function(pat, canc.list)
   return(patts)
 }
 
-write.lists.2nd <- function(lists)
+write.lists.2nd <- function(lists, type)
 {
+  #writes the lists creating their directories
+  #lists - files to be written
+  #type - csv or txt
   for(i in seq(length(lists)))
   {
     dir.create(names(lists)[[i]])
     setwd(names(lists)[[i]])
-    write.lists(lists[[i]], 2)
+    write.lists(lists[[i]], type)
     setwd('..')
   }
 }
 
 find.unique.degs.bps <- function(degs.list)
 {
+  #finds the unique degs associated with a cancer for a given BP
+  #degs.lists - bps along with cancer degs
   unique.list = list()
   for(i in seq(length(degs.list)))
   {
@@ -488,6 +512,9 @@ find.unique.degs.bps <- function(degs.list)
 
 find.intersection <- function(degs.bp.list, regulated.list)
 {
+  #finds intersection of degs in BPs of each cancer with the corresponding cancer degs lists
+  #degs.bp.list -  BPs list along with cancer associated degs
+  #regulated.list - cancer associated degs list
   req.list = list()
   for(i in seq(length(degs.bp.list)))
   {
