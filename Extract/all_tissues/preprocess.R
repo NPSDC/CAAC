@@ -459,23 +459,34 @@ test <- function(list1, list2)
   #if(count == 7)
   #print('success')
 }
-check.for.pattern <- function(pat, canc.list)
+check.for.pattern <- function(pat, bps.list, degs.list)
 {
   #checks for a gene name the given list of cancer genes
   #pat -  gene names to be searched in the cancer list
   #canc.list - list or collection of lists in which a given pattern has to be searched
-  patts = list()
-  for(i in seq(length(canc.list)))
+  patts.map = list()
+  for(i in seq(length(pat)))
   {
-    patts[[names(canc.list)[i]]]= c()
-    for(j in canc.list[[i]])
-    {
-      resp = grep(pat, j, ignore.case = T)
-      if(length(resp) == 1 && resp == 1)
-        patts[[names(canc.list)[i]]] = c(patts[[names(canc.list)[i]]], j)
-    }
+      for(j in seq(length(degs.list)))
+      {
+        indexes = grep(paste('^',pat[i], sep = ''), degs.list[[j]], ignore.case = T)
+        if(length(indexes) == 0)
+          next
+        genes.map = degs.list[[j]][indexes]
+        #print(genes.map)
+        existing.names = intersect(genes.map, names(patts.map))
+        if(length(existing.names) > 0)
+        {
+          #print('yes')
+          for(name in existing.names)
+            patts.map[[name]] = c(patts.map[[name]], names(degs.list)[j])
+        }
+        new.genes = setdiff(genes.map, existing.names)
+        if(length(new.genes) != 0)
+          patts.map[new.genes] = names(degs.list)[j]
+      }
   }
-  return(patts)
+  return(patts.map)
 }
 
 write.lists.2nd <- function(lists, type)
@@ -499,12 +510,7 @@ find.unique.degs.bps <- function(degs.list)
   unique.list = list()
   for(i in seq(length(degs.list)))
   {
-    unique.list[[i]] = lapply(seq(l.tumors), function(x)
-    {
-      Reduce(setdiff, c(degs.list[[i]][x], 
-                        degs.list[[i]][-x]))
-    })
-    names(unique.list[[i]]) = names(degs.list[[i]])
+    unique.list[[i]] = find.unique.list(degs.list[[i]])
   }
   names(unique.list) = names(degs.list)
   return(unique.list)
@@ -523,4 +529,52 @@ find.intersection <- function(degs.bp.list, regulated.list)
   }
   names(req.list) = names(degs.bp.list)
   return(req.list)
+}
+  
+find.bp.cancer.genes <- function(bps.list, canc.genes)
+{
+  bp.canc.genes = lapply(bps.list, function(x)
+    {
+    intersect(x, canc.genes)
+  })
+  names(bp.canc.genes) = names(bps.list)
+  return(bp.canc.genes)
+}
+
+find.unique.list <- function(degs.list)
+{
+  ##find the unique elements across a list
+  req_list = lapply(seq(length(degs.list)), function(x)
+  {
+    Reduce(setdiff, c(degs.list[x], 
+                      degs.list[-x]))
+    })
+  names(req_list) = names(degs.list)
+  return(req_list)
+}
+
+find.gene.bp <- function(genes, bps.genes.ids)
+{
+  req.genes = list()
+  for(g in genes)
+  {
+    for(i in seq(length(bps.genes.ids)))
+    {
+      if(length(which(bps.genes.ids[[i]] == g)) > 0)
+        req.genes[[g]] = c(req.genes[[g]], names(bps.genes.ids)[i])
+    }
+  }
+    return(req.genes)
+}
+
+test.degs <- function(degs.bp, degs.list)
+{
+  for(i in seq(length(degs.bp)))
+  {
+    mapply(function(x,y)
+      {
+      if(sum(is.na(match(x,y))) != 0)
+        print('no')
+    }, degs.bp[[i]], degs.list)
+  }
 }

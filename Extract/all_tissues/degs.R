@@ -53,6 +53,7 @@ ggplot.needs(df.lengths.unique.bps.degs, colnames(df.lengths.unique.bps.degs)[1]
 ###Working with gene ids
 genes.ids = read.csv('gene_names.csv')
 tot.mapped = genes.ids$Ensembl.Gene.ID ##all genes with their gene ids
+gene.names = as.character(genes.ids$Associated.Gene.Name)
 
 ##Experiment with lymphoma
 lymphoma.up.degs.id = as.character(genes.ids$Associated.Gene.Name[match(intersect(diff.expressed.up.all.canc.corr$Lymphoma, tot.mapped), genes.ids$Ensembl.Gene.ID)])
@@ -70,11 +71,43 @@ unique.genes.ids.map.down = map.genes.lists(unique.degs.down.bps, genes.ids)
 
 ###writing the lists
 setwd('up')
-write.lists.2nd(genes.ids.map.up)
+write.lists.2nd(unique.genes.ids.map.up)
 setwd('../down/')
-write.lists.2nd(genes.ids.map.down)
+write.lists.2nd(unique.genes.ids.map.down)
 
-###Cell Cycle
+###looking for specific genes
+cancer.genes = c('RB1', 'MYC', 'BCL2', 'NKB', 'CCND', 'VEGF', 'HIF1', 'MTOR', 'BID', 'BAD', 'CASP',
+                    'HGF', 'TP53', 'AKT1', 'PKB', 'RAC', 'TEP1', 'CDH1', 'CDHE', 'UVO', 'AR', 'DHTR',
+                    'NR3C4', 'PIK3CA', 'FGFR3', 'JTK4', 'BRAF', 'RAFB1', 'CHEK2', 'CDS1', 'CHK2', 
+                    'RAD53', 'RB1', 'HRAS', 'MET', 'TGFBR2', 'KRAS', 'RASK2', 'AXIN', 'PTEN')
+cancer.genes.up = check.for.pattern(cancer.genes, bps.genes.ids,
+                                    map.genes.lists(diff.expressed.up.all.canc.corr,genes.ids))
+                                
+cancer.genes.down = check.for.pattern(cancer.genes, bps.genes.ids,
+                                    map.genes.lists(diff.expressed.down.all.canc.corr,genes.ids))
+
+
+bp.cancer.genes.down = find.bp.cancer.genes(bps.genes.ids, names(cancer.genes.down))
+bp.cancer.genes.up = find.bp.cancer.genes(bps.genes.ids, names(cancer.genes.up))
+
+#unique.bp.cancer.genes.down = find.intersection(bp.cancer.genes.down, na)
+#unique.bp.cancer.genes.up = find.unique.list(bp.cancer.genes.up)
+
+lengths.bps.cancer.genes = list()
+lengths.bps.cancer.genes[['down']] = find.lengths(bp.cancer.genes.down)
+lengths.bps.cancer.genes[['up']] = find.lengths(bp.cancer.genes.up)
+#lengths.bps.cancer.genes[['unique_down']] = find.lengths(unique.bp.cancer.genes.down)
+#lengths.bps.cancer.genes[['unique_up']] = find.lengths(unique.bp.cancer.genes.up)
+
+df.length.cancer.genes = create.df.length(lengths.bps.cancer.genes, 4, 7, names(bp.genes.ensembl))
+ggplot.needs(df.length.cancer.genes, colnames(df.length.cancer.genes)[1], colnames(df.length.cancer.genes)[2], 'red' )
+ggplot.needs(df.length.cancer.genes, colnames(df.length.cancer.genes)[1], colnames(df.length.cancer.genes)[3], 'green')
+ggplot.needs(df.length.cancer.genes, colnames(df.length.cancer.genes)[1], colnames(df.length.cancer.genes)[4], 'blue')
+ggplot.needs(df.length.cancer.genes, colnames(df.length.cancer.genes)[1], colnames(df.length.cancer.genes)[5], 'pink')
+
+canc.genes.up.inv.bp = find.gene.bp(names(cancer.genes.up), bps.genes.ids)
+canc.genes.down.inv.bp = find.gene.bp(names(cancer.genes.down), bps.genes.ids)
+
 p53_up = check.for.pattern('P53', genes.ids.map.up$cell_cycle)
 p53_down = check.for.pattern('P53', genes.ids.map.down$cell_cycle)
 
