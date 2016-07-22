@@ -1,3 +1,4 @@
+library(TCGAbiolinks)
 setwd('~/Downloads/data/mRNA_counts/')
 mRNA_files = list.files()[!grepl('txt',list.files())] ##all files except manifest
 library(rjson)
