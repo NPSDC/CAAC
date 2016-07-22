@@ -17,6 +17,8 @@ library(dplyr)
 library(EDASeq)
 library(fdrtool)
 library(DESeq2)
+library('gplots')
+load('diff.RData')
 
 diff.genes = list()
 ##Match-Control Samples
@@ -76,8 +78,13 @@ res_sim <- results(dds_sim)
 
 rld <- rlogTransformation(dds)
 rld_sim <- rlogTransformation(dds_sim)
-summary(res)
-View(res)
+
+nt <- normTransform(dds)
+vs <- vst(dds)
+
+nt_sim <- normTransform(dds_sim)
+vs_sim <- vst(dds_sim)
+
 res <- res[order(res$padj), ]
 summary(res)
 diff.genes[['deseq']] <- rownames(res[res$padj < 0.01 & abs(res$log2FoldChange) > 2.5, ])
@@ -90,8 +97,6 @@ ggplot(d, aes(x=type, y=count)) +
   scale_y_log10(breaks=c(25,100,400))
 
 plotMA(res, ylim = c(-2,2))
-nt <- normTransform(dds)
-vs <- vst(dds)
 select <- order(rowMeans(counts(dds,normalized=TRUE)),decreasing=TRUE)[1:20]
 ###heatmap(assay(dds), Rowv = NA, Colv = NA, col = cm.colors(256), scale="column", margins=c(5,10))
 library(FactoMineR)
@@ -153,6 +158,21 @@ text(x, y, labels = sample_info$type, cex=.7)
 library(pheatmap)
 pheatmap(assay(nt)[diff.genes$deseq,], rowna)
 
+##Cook's distance
+cook = assays(dds)[['cooks']]
+colnames(cook) = sample_info$pat.comb
+boxplot(log10(cook[,c(1:106)]))
+cook_sim = assays(dds_sim)[['cooks']]
+colnames(cook_sim) = sample_info$pat.comb
+boxplot(log10(cook_sim[,c(1:106)]))
+
+##
+g1 = get.imp.genes(1,assay(rld), 1000)
+g2 = get.imp.genes(2,assay(rld), 1000)
+g2 = get.imp.genes(1,counts(dds, normalized = T), 1000)
+g3 = get.imp.genes(1,assay(nt), 1000)
+g4 = get.imp.genes(1,assay(vs, normalized = T), 1000)
+###Diff Genes
 library(GOstats)
 library(GO.db)
 library("AnnotationForge")
@@ -183,10 +203,3 @@ write(as.character(universal.entrez), 'all_genes.txt')
 
 common = intersect(diff.genes.mod$edgeR, ent.ids)
 
-only_cancer = data.frame(type = group.samples[tumor.indexes])
-
-dds_full = DESeqDataSetFromMatrix(exp_prof[,tumor.indexes], only_cancer, design = ~type)
-dds <- dds[ rowSums(counts(dds)) > 1, ]
-nt_full = normTransform(dds_full)
-d = dist(t(assay(nt_full)[diff.genes$deseq, ]))
-plot(hclust(d), labels = group.samples)

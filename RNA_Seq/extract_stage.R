@@ -29,3 +29,29 @@ stages = unique(pap.comb$stage)
 stages = stages[1:4]
 type = unique(pap.comb$type)
 type = type[2:3]
+
+stages.index = sapply(stages, function(x)
+  {
+  which(pap.comb$stage == x)
+})
+names(stages.index) = stages
+
+types.index = sapply(type, function(x)
+{
+  which(pap.comb$type == x)
+})
+names(types.index) = type
+
+int.indexes = sapply(types.index, function(x)
+{
+  sapply(stages.index, function(y)
+    {
+    intersect(x,y)
+  })
+})
+
+int.indexes.df = data.frame(type1 = c(int.indexes[5], int.indexes[6], int.indexes[7], int.indexes[8]),
+                            type2 =   c(int.indexes[1], int.indexes[2], int.indexes[3], int.indexes[4]))
+length(which(pap.comb$stage == 'not reported'))
+a = unique(pap.comb$type)
+length(which(pap.comb$type ==a[2]))
