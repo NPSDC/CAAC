@@ -29,7 +29,7 @@ test(t.ens.ids, t.genes.entrez)
 t.indexes <- get.indexes(t.ens.ids, t.g)
 
 exp_fpqm <- get.count.matrix(t.ens.ids.all, t.indexes, tfiles, t1, mRNA_files_path, proj_dir)
-
+exp_fpqm <- exp_fpqm[rowSums(exp_fpqm)>1,]
 exp_fpqm1 <- do.everything(wd, mRNA_files_path, total_case_files, file_name, proj_dir)
 write.csv(exp_fpqm, 'fpqm.csv')
 for(i in seq_along(colnames(exp_fpqm)))
