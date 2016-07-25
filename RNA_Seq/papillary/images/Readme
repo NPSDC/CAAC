@@ -1,0 +1,9 @@
+Note this will contain all the different plots under different assumptions
+The first folder is PCA
+PCA - Contains the PCA plots for different normalisation conditions under different conditions
+Each sub folder under PCA contains the different normalisation techniques used (fpqm,vst,rld etc)
+Under each sub folder we have different images based on different conditions.
+  i)all/overall contains PCA using all genes
+  ii)var,mad,val - Contains PCA using the most genes which have the maximum variance, mad values and the maximum rowwise means.
+                   These further have _100,500,1000 etc meaning based on the above values of top these number of genes.
+  iii)diff - Contains PCA using degs with numbers indicating the log fold change.
