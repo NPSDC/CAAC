@@ -1,0 +1,7 @@
+This folder contains the text files which compare the genes in the patient data with HPA data
+comparing.R does the above
+
+mca contains the results w.r.t to above
+
+cancer contains csv files which contains expression w.r.t all genes in HPA for the respective cancer
+cancer_comp.R plays with the above comparing within them and also finds genes in each metabolic process and the relationship with liver
