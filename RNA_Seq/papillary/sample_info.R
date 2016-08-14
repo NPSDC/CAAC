@@ -37,7 +37,7 @@ for(i in normal.indexes)
 diff.ids = unique(diff.ids)
 length(intersect(diff.ids, tumor.indexes))
 length(diff.ids)
-
+sum(is.na((match(names(pat_stages), pats))))
 
 sample.ids = colnames(exp_prof)
 sum(sample.ids == sort(sample.ids)) == length(sample.ids)
@@ -64,3 +64,5 @@ for(i in seq_along(diff.ids))
 
 sample.info$type = as.factor(sample.info$type)  ##Needed for design matrix
 sample.info$pat.nums = as.factor(sample.info$pat.nums)
+
+

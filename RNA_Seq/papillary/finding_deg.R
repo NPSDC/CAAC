@@ -5,11 +5,22 @@ library(ConsensusClusterPlus)
 
 dds <- DESeqDataSetFromMatrix(countData = exp_prof_diff, colData = sample.info, design = ~pat.nums + type)
 colData(dds)
+match_control_tum = list()
 dds <- dds[ rowSums(counts(dds)) > 1, ]
 dds <- DESeq(dds)
-rld <- rlogTransformation(dds)
-vs <- vst(dds)
-nt <- normTransform(dds)
+dds_data <- read.csv('dds.csv')
+exp_fpqm = read.csv('fpqm.csv')
+exp_fpqm = exp_fpqm[match(rownames(assay(dds)), rownames(exp_fpqm)),]
+exp_fpqm <- exp_fpqm[ rowSums(exp_fpqm) > 1, ]
+
+match.control.tumor = list()
+match.control.tumor[['dfs']] = list()
+
+match.control.tumor[['dfs']][['rld']] <- rlogTransformation(dds)
+match.control.tumor[['dfs']][['vs']] <- vst(dds)
+match.control.tumor[['dfs']][['nt']] <- normTransform(dds)
+match.control.tumor[['dfs']][['fpqm']] <- exp_fpqm[,diff.ids]
+match.control.tumor[['dfs']][['fpqm_log']] <- log2(exp_fpqm[,diff.ids]+1)
 
 res <- results(dds)
 summary(res)
@@ -26,28 +37,10 @@ diff.genes[[4]] = rownames(res[abs(res$log2FoldChange) > 4 & res$padj < 0.01 ,])
 diff.genes[[5]] = rownames(res[abs(res$log2FoldChange) > 5 & res$padj < 0.01 ,])
 names(diff.genes) = c(2,3,4,5)
 
-top.val.genes = list()
-top.val.genes[['rld']] = get.imp.genes(1,assay(rld),5000)
-top.val.genes[['nt']] = get.imp.genes(1,assay(nt),5000)
-top.val.genes[['vs']] = get.imp.genes(1,assay(vs),5000)
-top.val.genes[['fpqm']] = get.imp.genes(1,exp_fpqm[,diff.ids],5000)
-top.val.genes[['fpqm_log']] = get.imp.genes(1,log2(exp_fpqm[,diff.ids]+1),5000)
-
-top.var.genes = list()
-top.var.genes[['rld']] = get.imp.genes(3,assay(rld),5000)
-top.var.genes[['nt']] = get.imp.genes(3,assay(nt),5000)
-top.var.genes[['vs']] = get.imp.genes(3,assay(vs),5000)
-top.var.genes[['fpqm']] = get.imp.genes(3,exp_fpqm[,diff.ids],5000)
-top.var.genes[['fpqm_log']] = get.imp.genes(3,log2(exp_fpqm[,diff.ids]+1),5000)
-
-top.mad.genes = list()
-top.mad.genes[['rld']] = get.imp.genes(2,assay(rld),5000)
-top.mad.genes[['nt']] = get.imp.genes(2,assay(nt),5000)
-top.mad.genes[['vs']] = get.imp.genes(2,assay(vs),5000)
-top.mad.genes[['fpqm']] = get.imp.genes(2,exp_fpqm[,diff.ids],5000)
-top.mad.genes[['fpqm_log']] = get.imp.genes(2,log2(exp_fpqm[,diff.ids]+1),5000)
-
-
+match.control.tumor[['genes']] = list()
+match.control.tumor[['genes']][['top.val.genes']] = create.list.imp.genes(match.control.tumor[['dfs']], 1, 5000)
+match.control.tumor[['genes']][['top.mad.genes']] = create.list.imp.genes(match.control.tumor[['dfs']], 2, 5000)
+match.control.tumor[['genes']][['top.var.genes']] = create.list.imp.genes(match.control.tumor[['dfs']], 3, 5000)
 
 
 View(t(counts(dds)[diff.genes[[5]],]))
@@ -72,7 +65,7 @@ con_res = ConsensusClusterPlus(d_fp,maxK=6,reps=50,pItem=0.8,pFeature=1,title = 
 
 library(factoextra)
 library(FactoMineR)
-dt = t(exp_fpqm[,diff.ids])
+dt = t(assay(vs)[top.mad.genes$vs[1:5000],])
 rownames(dt) = sample.info$type
 pc = PCA(dt)
 fviz_pca_ind(pc)
