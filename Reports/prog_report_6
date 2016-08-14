@@ -1,0 +1,16 @@
+I was working on the topic Comparative Analysis across cancers.
+I used proteomic data for the analysis.
+I first did an MCA analysis using all genes across all the cancer. In the plot we saw that certain cancers were clearly separated.
+We wanted to find the reason behind the separation of these cancers.
+First we took all the genes associated with different biological processes to find whether certain biological process was the reason behind the separation of cancers.
+Then different combinations of genes were taken and MCA plots were looked using the same leading us to conclude only few genes(100-200) were enough to separate those cancers. 
+The clustering analysis further confirmed above picture.
+Biological evidence for separation came by looking at the number of unique differentially expressed genes in each cancer. These are explained in more detail in the report attached below.
+String analysis and GO annotation was also performed for these unique genes.
+These genes were also characterised in terms of the different biological processes to understand what part of processes they were trying to alter.
+Evidence for the same was also looked in the literature.
+I also spent time in building an expertise in learning  techniques to analyse other cancer genomic data(RNA-Seq and microarray).
+I have started working on the RNA-Seq data of papillary renal cell carcinoma.
+Various problems that looked at the application of Machine Learning in computational biology were also looked at. We wanted to see what problem we could pick that would be of our interest and also the different methodologies that have been used in dealing with the problem and what we could contribute from our side.
+We in the end started working on using Machine Learning to predict cancer stages using RNA-Seq data.
+
